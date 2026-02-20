@@ -51,7 +51,7 @@ module HTMLParser
 
   class Tokenizer
     EOF = nil # assuming nil is EOF for stringscanner, @input_stream.eos? probably better
-    ENTITIES = JSON.parse(File.read('entities.json'))
+    ENTITIES = JSON.parse(File.read(File.join(__dir__, "entities.json")))
     ENTITIES_KEYS = ENTITIES.keys.map { |x| x.delete_prefix('&') }
     WHITESPACE = ["\u0009", "\u000a", "\u000c", "\u0020"].freeze
     PART_OF_AN_ATTRIBUTE = %i[
@@ -120,7 +120,7 @@ module HTMLParser
     end
 
     def consumed_as_part_of_an_attribute?
-      PART_OF_AN_ATTRIBUTE.include?(@return_to)
+      PART_OF_AN_ATTRIBUTE.include?(@return_state)
     end
 
     def flush_code_points_consumed_as_character_reference
