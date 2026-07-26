@@ -149,18 +149,14 @@ module HTML5libTreeConstruction
     end
 
     def run
-      if fragment?
-        return {
-          ok: false,
-          error: "fragment parsing not implemented",
-          document: nil
-        }
+      tree = if fragment?
+        HTMLParser.parse_fragment(data, context: document_fragment, scripting: scripting) { |_token| }
+      else
+        HTMLParser.parse(data) { |_token| }
       end
-
-      document = HTMLParser.parse(data) { |_token| }
       {
         ok: true,
-        document: HTML5libTreeConstruction.serialize_document(document),
+        document: HTML5libTreeConstruction.serialize_document(tree),
         error: nil
       }
     rescue HTMLParser::NotImplementedError, StandardError => e

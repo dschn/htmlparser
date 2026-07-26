@@ -8,6 +8,9 @@ require_relative "tree_construction/insertion_modes"
 require_relative "tree_construction/table_modes"
 
 module HTMLParser
+  SVG_NAMESPACE = "http://www.w3.org/2000/svg"
+  MATHML_NAMESPACE = "http://www.w3.org/1998/Math/MathML"
+
   # §13.2.6 Tree construction
   # https://html.spec.whatwg.org/multipage/parsing.html#tree-construction
   #
@@ -19,12 +22,13 @@ module HTMLParser
     include InsertionModes
     include TableModes
 
-    attr_reader :tokenizer, :stack_of_open_elements, :document
+    attr_reader :tokenizer, :stack_of_open_elements, :document, :context_element
 
-    def initialize(tokenizer:)
+    def initialize(tokenizer:, context_element: nil)
       @tokenizer = tokenizer
       @stack_of_open_elements = OpenElements.new
       @document = Document.new
+      @context_element = context_element
       @insertion_mode = :initial
       @original_insertion_mode = nil
       @head_element = nil
@@ -39,8 +43,13 @@ module HTMLParser
       @template_insertion_modes = []
     end
 
+    def fragment?
+      !@context_element.nil?
+    end
+
     def call(&block)
       block ||= ->(_token) {}
+      setup_fragment_parsing if fragment?
 
       tokenizer.parse do |token|
         process(token)
@@ -48,12 +57,39 @@ module HTMLParser
         break if @halt
       end
 
-      document
+      fragment? ? extract_fragment : document
     end
 
     private
 
+    # §13.4 Parsing HTML fragments — parser setup (html root + insertion mode).
+    def setup_fragment_parsing
+      root = Element.new("html")
+      document.append_child(root)
+      stack_of_open_elements.push(root)
+
+      if @context_element.html? && @context_element.name == "template"
+        @template_insertion_modes << :in_template
+      end
+
+      if @context_element.html? && @context_element.name == "form"
+        @form_element = @context_element
+      end
+
+      reset_insertion_mode_appropriately
+    end
+
+    def extract_fragment
+      fragment = DocumentFragment.new
+      root = document.children.find { |c| c.is_a?(Element) && c.html? && c.name == "html" }
+      return fragment unless root
+
+      root.children.dup.each { |child| fragment.append_child(child) }
+      fragment
+    end
+
     def process(token)
+      guard = 0
       loop do
         @reprocess = false
         method = :"process_#{@insertion_mode}"
@@ -64,6 +100,8 @@ module HTMLParser
           @insertion_mode = :in_body
           @reprocess = true
         end
+        guard += 1
+        raise "insertion-mode reprocess loop (#{@insertion_mode})" if guard > 64
         break unless @reprocess
       end
     end

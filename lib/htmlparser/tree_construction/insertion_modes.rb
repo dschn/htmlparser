@@ -471,6 +471,14 @@ module HTMLParser
           acknowledge_self_closing_flag(token)
           @frameset_ok = false
         when "input"
+          if fragment_context_is?("select")
+            parse_error("unexpected-start-tag")
+            return
+          end
+          if stack_of_open_elements.in_scope?("select")
+            parse_error("unexpected-start-tag")
+            stack_of_open_elements.pop_until("select")
+          end
           reconstruct_active_formatting_elements
           insert_html_element(token)
           stack_of_open_elements.pop
@@ -509,16 +517,31 @@ module HTMLParser
         when "noembed"
           generic_raw_text_element_parsing_algorithm(token)
         when "select"
+          # Living standard: select stays in "in body" (no separate select insertion mode).
+          if fragment_context_is?("select")
+            parse_error("unexpected-start-tag")
+          elsif stack_of_open_elements.in_scope?("select")
+            parse_error("unexpected-start-tag")
+            stack_of_open_elements.pop_until("select")
+          else
+            reconstruct_active_formatting_elements
+            insert_html_element(token)
+            @frameset_ok = false
+          end
+        when "option"
+          if stack_of_open_elements.in_scope?("select")
+            generate_implied_end_tags(exclude: "optgroup")
+          elsif current_node&.html? && current_node.name == "option"
+            stack_of_open_elements.pop
+          end
           reconstruct_active_formatting_elements
           insert_html_element(token)
-          @frameset_ok = false
-          @insertion_mode = if %i[in_table in_caption in_table_body in_row in_cell].include?(@insertion_mode)
-            :in_select_in_table
-          else
-            :in_select
+        when "optgroup"
+          if stack_of_open_elements.in_scope?("select")
+            generate_implied_end_tags
+          elsif current_node&.html? && current_node.name == "option"
+            stack_of_open_elements.pop
           end
-        when "optgroup", "option"
-          stack_of_open_elements.pop if current_node&.html? && current_node.name == "option"
           reconstruct_active_formatting_elements
           insert_html_element(token)
         when "rb", "rtc"
@@ -871,6 +894,7 @@ module HTMLParser
         end
       end
 
+      # Legacy stubs — living standard folded select into "in body".
       def process_in_select(token)
         @insertion_mode = :in_body
         anything_else_reprocess(token)
@@ -879,6 +903,10 @@ module HTMLParser
       def process_in_select_in_table(token)
         @insertion_mode = :in_body
         anything_else_reprocess(token)
+      end
+
+      def fragment_context_is?(name)
+        fragment? && @context_element&.html? && @context_element.name == name
       end
     end
   end

@@ -209,13 +209,15 @@ module HTMLParser
         @insertion_mode = :in_row
       end
 
-      # §13.2.6.3 Reset the insertion mode appropriately (table-focused).
+      # §13.2.6.3 Reset the insertion mode appropriately.
       def reset_insertion_mode_appropriately
         nodes = stack_of_open_elements.to_a
         idx = nodes.size - 1
         while idx >= 0
           node = nodes[idx]
           last = (idx == 0)
+          # Fragment case: when at the root, treat the context element as the node.
+          node = @context_element if last && @context_element
 
           if node.html? && %w[td th].include?(node.name) && !last
             @insertion_mode = :in_cell

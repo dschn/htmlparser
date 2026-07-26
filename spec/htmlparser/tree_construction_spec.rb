@@ -79,4 +79,11 @@ RSpec.describe HTMLParser::TreeConstruction do
       |   <body>
     DUMP
   end
+
+  it "parses an HTML fragment against a context element" do
+    frag = HTMLParser.parse_fragment("<span><body>", context: "div") {}
+    expect(frag.html5lib_dump).to eq(<<~DUMP.rstrip)
+      | <span>
+    DUMP
+  end
 end

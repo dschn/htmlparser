@@ -48,6 +48,15 @@ module HTMLParser
     end
   end
 
+  # Result of the HTML fragment parsing algorithm (§13.4).
+  class DocumentFragment < Node
+    def html5lib_dump
+      lines = []
+      children.each { |child| child.append_html5lib_dump(lines, 0) }
+      lines.join("\n")
+    end
+  end
+
   class Document < Node
     attr_accessor :quirks_mode
 

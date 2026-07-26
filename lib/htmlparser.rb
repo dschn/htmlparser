@@ -27,10 +27,50 @@ module HTMLParser
     TokenizeResult.new(tokens: tokens, parse_errors: parse_errors)
   end
 
-  # Run the (currently stub) tree construction stage over tokenized input.
+  # Run tree construction over tokenized input (full document).
   def self.parse(html, &)
     input_stream = InputStream.new(html)
     tokenizer = Tokenizer.new(input_stream)
     TreeConstruction.new(tokenizer: tokenizer).call(&)
   end
+
+  # §13.4 HTML fragment parsing algorithm.
+  # context is an html5lib context string: "div", "td", "svg path", "math mi", …
+  def self.parse_fragment(html, context:, scripting: false, &)
+    context_element = context_element_for_fragment(context)
+    content_model = content_model_for_fragment_context(context_element, scripting: scripting)
+    input_stream = InputStream.new(html)
+    tokenizer = Tokenizer.new(
+      input_stream,
+      content_model: content_model,
+      last_start_tag: context_element.name
+    )
+    TreeConstruction.new(tokenizer: tokenizer, context_element: context_element).call(&)
+  end
+
+  def self.context_element_for_fragment(context)
+    parts = context.to_s.split
+    if parts.length == 2 && parts[0] == "svg"
+      Element.new(parts[1], namespace: SVG_NAMESPACE)
+    elsif parts.length == 2 && parts[0] == "math"
+      Element.new(parts[1], namespace: MATHML_NAMESPACE)
+    else
+      Element.new(parts.fetch(0))
+    end
+  end
+  private_class_method :context_element_for_fragment
+
+  def self.content_model_for_fragment_context(element, scripting: false)
+    return :data unless element.html?
+
+    case element.name
+    when "title", "textarea" then :rcdata
+    when "style", "xmp", "iframe", "noembed", "noframes" then :rawtext
+    when "script" then :script_data
+    when "noscript" then scripting ? :rawtext : :data
+    when "plaintext" then :plaintext
+    else :data
+    end
+  end
+  private_class_method :content_model_for_fragment_context
 end
