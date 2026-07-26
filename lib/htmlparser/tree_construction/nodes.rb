@@ -98,6 +98,8 @@ module HTMLParser
   class Element < Node
     attr_reader :name, :namespace, :attributes
     attr_accessor :token # StartTagToken used to create this element (AAA / reconstruct)
+    # §4.10.10 option selectedness / §4.10.17 selectedcontent disabled flag.
+    attr_accessor :selectedness, :disabled
 
     def initialize(name, attributes: {}, namespace: HTML_NAMESPACE)
       super()
@@ -105,6 +107,8 @@ module HTMLParser
       @namespace = namespace
       @attributes = attributes.transform_keys(&:to_s)
       @token = nil
+      @selectedness = false
+      @disabled = false
       @template_contents = TemplateContents.new if html? && name == "template"
     end
 

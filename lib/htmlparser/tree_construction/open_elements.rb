@@ -7,8 +7,11 @@ module HTMLParser
     MATHML_SCOPE_BARRIERS = %w[mi mo mn ms mtext annotation-xml].freeze
     SVG_SCOPE_BARRIERS = %w[foreignObject desc title].freeze
 
+    attr_accessor :on_pop
+
     def initialize
       @elements = []
+      @on_pop = nil
     end
 
     def push(element)
@@ -16,7 +19,9 @@ module HTMLParser
     end
 
     def pop
-      @elements.pop
+      el = @elements.pop
+      @on_pop&.call(el) if el
+      el
     end
 
     def pop_until(name)

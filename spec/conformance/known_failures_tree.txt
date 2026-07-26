@@ -8,8 +8,3 @@ processing-instructions.dat	103	<body><?start data
 processing-instructions.dat	104	<body><?start ? ?
 processing-instructions.dat	105	<body><?
 tests1.dat	39	<?
-tests4.dat	8	<!-- inside </script> -->
-webkit02.dat	44	<select><button><selectedcontent></button><option>X
-webkit02.dat	45	<select><button><selectedcontent></button><option>x<i>i<b>ib</i>b
-webkit02.dat	46	<select><button><selectedcontent></button><option>X<option>Y
-webkit02.dat	47	<select><button><selectedcontent></button><option>X<option selected>Y

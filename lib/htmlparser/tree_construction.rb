@@ -4,6 +4,7 @@ require_relative "tree_construction/document"
 require_relative "tree_construction/open_elements"
 require_relative "tree_construction/helpers"
 require_relative "tree_construction/quirks"
+require_relative "tree_construction/selected_content"
 require_relative "tree_construction/active_formatting"
 require_relative "tree_construction/foreign_content"
 require_relative "tree_construction/insertion_modes"
@@ -21,6 +22,7 @@ module HTMLParser
   class TreeConstruction
     include Helpers
     include Quirks
+    include SelectedContent
     include ActiveFormatting
     include ForeignContent
     include InsertionModes
@@ -31,6 +33,7 @@ module HTMLParser
     def initialize(tokenizer:, context_element: nil)
       @tokenizer = tokenizer
       @stack_of_open_elements = OpenElements.new
+      @stack_of_open_elements.on_pop = method(:option_popped_from_stack)
       @document = Document.new
       @context_element = context_element
       @insertion_mode = :initial

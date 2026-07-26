@@ -65,6 +65,10 @@ module HTMLParser
         end
         element = Element.new(token.name, attributes: attrs)
         element.token = token
+        # §4.10.10 — option selectedness defaults from the selected attribute.
+        if element.html? && element.name == "option"
+          element.selectedness = element.attributes.key?("selected")
+        end
         element
       end
 
@@ -72,6 +76,10 @@ module HTMLParser
         element = create_element_for_token(token)
         insert_node_at(appropriate_place_for_inserting_a_node, element)
         stack_of_open_elements.push(element)
+        # §4.10.10 — option HTML element insertion steps (selectedness setting).
+        if element.html? && element.name == "option"
+          run_selectedness_setting(nearest_ancestor_select(element))
+        end
         element
       end
 
@@ -158,6 +166,9 @@ module HTMLParser
       end
 
       def stop_parsing
+        # §13.2.6 — The end: pop all the nodes off the stack of open elements
+        # (fires option→selectedcontent cloning on each option pop).
+        stack_of_open_elements.pop until stack_of_open_elements.empty?
         @halt = true
       end
 
