@@ -338,9 +338,23 @@ module HTMLParser
           if @template_insertion_modes.any?
             process_in_template(token)
           else
+            # §13.2.6.4.7 — EOF in body: parse error if a non-exempt node is open.
+            # html5lib names this expected-closing-tag-but-got-eof.
+            unless stack_of_open_elements.to_a.all? { |el| eof_in_body_allowed?(el) }
+              parse_error("expected-closing-tag-but-got-eof")
+            end
             stop_parsing
           end
         end
+      end
+
+      def eof_in_body_allowed?(element)
+        return false unless element.is_a?(Element) && element.html?
+
+        %w[
+          dd dt li optgroup option p rb rp rt rtc
+          tbody td tfoot th thead tr body html
+        ].include?(element.name)
       end
 
       def process_in_body_start_tag(token)
