@@ -172,9 +172,10 @@ module HTMLParser
         @halt = true
       end
 
-      def parse_error(_code)
-        # Tree parse errors are collected later when the harness compares #errors.
-        # For now matching document shape is the progress gate.
+      def parse_error(code, token = @current_token)
+        line = token&.line || tokenizer.input_stream_line
+        column = token&.column || tokenizer.input_stream_column
+        tokenizer.parse_errors << ParseError.new(code, line: line, column: column)
       end
 
       def whitespace_character_token?(token)

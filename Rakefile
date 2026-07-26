@@ -40,19 +40,26 @@ namespace :conformance do
   end
 
   namespace :tree do
-    desc "Rewrite known_failures_tree.txt from current tree mismatches"
+    desc "Rewrite known_failures_tree{,_errors}.txt from current mismatches"
     task :baseline do
       require_relative "lib/htmlparser"
       require_relative "spec/support/html5lib_tree_construction"
 
-      failures = []
+      doc_failures = []
+      error_failures = []
       HTML5libTreeConstruction.each_case do |test_case|
         result = test_case.run
-        failures << test_case.key unless test_case.matches?(result)
+        unless test_case.document_matches?(result)
+          doc_failures << test_case.key
+          next
+        end
+        error_failures << test_case.key unless test_case.errors_match?(result)
       end
 
-      HTML5libTreeConstruction.write_known_failures(failures)
-      puts "Wrote #{failures.size} known failures to #{HTML5libTreeConstruction::KNOWN_FAILURES_PATH}"
+      HTML5libTreeConstruction.write_known_failures(doc_failures)
+      HTML5libTreeConstruction.write_known_error_failures(error_failures)
+      puts "Wrote #{doc_failures.size} document failures to #{HTML5libTreeConstruction::KNOWN_FAILURES_PATH}"
+      puts "Wrote #{error_failures.size} #errors failures to #{HTML5libTreeConstruction::KNOWN_ERROR_FAILURES_PATH}"
     end
   end
 end

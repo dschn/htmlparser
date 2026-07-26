@@ -5,6 +5,7 @@
 module HTML5libTreeConstruction
   FIXTURES_ROOT = File.expand_path("../fixtures/tree-construction", __dir__)
   KNOWN_FAILURES_PATH = File.expand_path("../conformance/known_failures_tree.txt", __dir__)
+  KNOWN_ERROR_FAILURES_PATH = File.expand_path("../conformance/known_failures_tree_errors.txt", __dir__)
 
   module_function
 
@@ -111,9 +112,19 @@ module HTML5libTreeConstruction
 
   def write_known_failures(keys, path = KNOWN_FAILURES_PATH)
     header = <<~HEADER
-      # html5lib/WPT tree-construction known failures — regenerate with:
+      # html5lib/WPT tree-construction known failures (document dump) — regenerate with:
       #   bundle exec rake conformance:tree:baseline
       # Format: file<TAB>index<TAB>data_snippet
+    HEADER
+    body = keys.sort.map { |k| "#{k}\n" }.join
+    File.write(path, header + body)
+  end
+
+  def write_known_error_failures(keys, path = KNOWN_ERROR_FAILURES_PATH)
+    header = <<~HEADER
+      # html5lib/WPT tree-construction known `#errors` mismatches — regenerate with:
+      #   bundle exec rake conformance:tree:baseline
+      # Only cases whose document dump already matches. Format: file<TAB>index<TAB>data_snippet
     HEADER
     body = keys.sort.map { |k| "#{k}\n" }.join
     File.write(path, header + body)
@@ -157,20 +168,41 @@ module HTML5libTreeConstruction
       {
         ok: true,
         document: HTML5libTreeConstruction.serialize_document(tree),
+        errors: Array(tree.parse_errors).map(&:to_html5lib),
         error: nil
       }
     rescue HTMLParser::NotImplementedError, StandardError => e
       {
         ok: false,
         error: "#{e.class}: #{e.message}",
-        document: nil
+        document: nil,
+        errors: nil
       }
     end
 
-    def matches?(run_result)
+    def expected_errors
+      # Compare `#errors` lines in `(line,col): code` form only. Legacy prose /
+      # `#new-errors` (`(line:col) code`) are tracked separately later.
+      errors.select { |line| line.match?(/\A\(\d+,\d+\):\s/) }
+    end
+
+    def document_matches?(run_result)
+      run_result[:ok] && run_result[:document].to_s.rstrip == expected_document.to_s.rstrip
+    end
+
+    def errors_match?(run_result)
       return false unless run_result[:ok]
 
-      run_result[:document].to_s.rstrip == expected_document.to_s.rstrip
+      expected = expected_errors
+      # No modern `(line,col): code` expectations → do not fail the case on `#errors`.
+      return true if expected.empty?
+
+      run_result[:errors] == expected
+    end
+
+    # Full match: document dump + `#errors` / `#new-errors`.
+    def matches?(run_result)
+      document_matches?(run_result) && errors_match?(run_result)
     end
   end
 

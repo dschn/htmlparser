@@ -66,7 +66,9 @@ module HTMLParser
         break if @halt
       end
 
-      fragment? ? extract_fragment : document
+      result = fragment? ? extract_fragment : document
+      result.parse_errors = tokenizer.parse_errors
+      result
     end
 
     private
@@ -98,6 +100,7 @@ module HTMLParser
     end
 
     def process(token)
+      @current_token = token
       guard = 0
       loop do
         @reprocess = false

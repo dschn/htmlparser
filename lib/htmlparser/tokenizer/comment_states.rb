@@ -29,7 +29,7 @@ module HTMLParser
         if next_characters_are?("--")
           # Consume those two characters, create a comment token whose data is the empty string, and switch to the comment start state.
           consume_characters(2)
-          @comment_token = CommentToken.new(+"")
+          @comment_token = new_comment_token
           switch_to(:comment_start)
         elsif next_characters_are?("DOCTYPE", case_insensitive: true)
           # Consume those characters and switch to the DOCTYPE state.
@@ -43,7 +43,7 @@ module HTMLParser
             switch_to(:cdata_section)
           else
             parse_error("cdata-in-html-content")
-            @comment_token = CommentToken.new(+"[CDATA[")
+            @comment_token = new_comment_token(+"[CDATA[")
             switch_to(:bogus_comment)
           end
         else
@@ -54,7 +54,7 @@ module HTMLParser
             @skip_next_input_stream_error_report = true
           end
           parse_error("incorrectly-opened-comment")
-          @comment_token = CommentToken.new(+"")
+          @comment_token = new_comment_token
           switch_to(:bogus_comment)
         end
       end

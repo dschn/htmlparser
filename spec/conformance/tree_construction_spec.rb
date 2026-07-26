@@ -12,16 +12,20 @@ RSpec.describe "html5lib/WPT tree-construction conformance" do
     end
   end
 
-  known = HTML5libTreeConstruction.load_known_failures
+  known_docs = HTML5libTreeConstruction.load_known_failures
+  known_errors = HTML5libTreeConstruction.load_known_failures(
+    HTML5libTreeConstruction::KNOWN_ERROR_FAILURES_PATH
+  )
 
   HTML5libTreeConstruction.each_case do |test_case|
     it "#{test_case.file}[#{test_case.index}]: #{test_case.description}" do
       result = test_case.run
-      passed = test_case.matches?(result)
+      doc_ok = test_case.document_matches?(result)
+      err_ok = test_case.errors_match?(result)
 
-      if known.include?(test_case.key)
-        if passed
-          raise "unexpected pass — remove from known_failures_tree.txt:\n#{test_case.key}"
+      if known_docs.include?(test_case.key)
+        if doc_ok
+          raise "unexpected document pass — remove from known_failures_tree.txt:\n#{test_case.key}"
         end
 
         skip "known failure: #{result[:error] || "tree mismatch"}"
@@ -29,6 +33,19 @@ RSpec.describe "html5lib/WPT tree-construction conformance" do
 
       expect(result[:ok]).to eq(true), result[:error]
       expect(result[:document].to_s.rstrip).to eq(test_case.expected_document.to_s.rstrip)
+
+      # `#errors` assertion only when the fixture has modern `(line,col): code` lines.
+      next unless test_case.expected_errors.any?
+
+      if known_errors.include?(test_case.key)
+        if err_ok
+          raise "unexpected #errors pass — remove from known_failures_tree_errors.txt:\n#{test_case.key}"
+        end
+
+        skip "known failure: #errors mismatch"
+      end
+
+      expect(result[:errors]).to eq(test_case.expected_errors)
     end
   end
 end

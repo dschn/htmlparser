@@ -68,12 +68,18 @@ module HTMLParser
 
   # Character cursor over preprocessed input. Surrogate-safe alternative to StringScanner.
   class InputStream
-    attr_reader :pos
+    attr_reader :pos, :line, :column, :last_line, :last_column
 
     def initialize(string)
       @codepoints = Input.codepoints(string)
       @chars = @codepoints.map { |cp| [cp].pack("U") }
       @pos = 0
+      # Position of the next character (html5lib: 1-based line, 0-based column).
+      @line = 1
+      @column = 0
+      # Position of the character most recently returned by getch.
+      @last_line = 1
+      @last_column = 0
     end
 
     def eos?
@@ -83,8 +89,16 @@ module HTMLParser
     def getch
       return nil if eos?
 
+      @last_line = @line
+      @last_column = @column
       ch = @chars[@pos]
       @pos += 1
+      if ch == "\n"
+        @line += 1
+        @column = 0
+      else
+        @column += 1
+      end
       ch
     end
 

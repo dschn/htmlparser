@@ -86,6 +86,14 @@ module HTMLParser
     # Tree construction sets this so markup-declaration can enter CDATA in foreign content.
     attr_accessor :adjusted_current_node_provider
 
+    def input_stream_line
+      @input_stream.line
+    end
+
+    def input_stream_column
+      @input_stream.column
+    end
+
     def initialize(input_stream, content_model: :data, last_start_tag: nil, parse_errors: nil)
       @input_stream = input_stream
       @return_state = nil
@@ -101,6 +109,8 @@ module HTMLParser
       @discard_attribute_value = false
       @skip_next_input_stream_error_report = false
       @adjusted_current_node_provider = nil
+      @markup_line = 1
+      @markup_column = 0
     end
 
     def self.content_model_for_html5lib_state(name)
@@ -222,6 +232,7 @@ module HTMLParser
     end
 
     def emit(token)
+      locate_emitted_token!(token)
       if token.is_a?(EndTagToken)
         parse_error("end-tag-with-attributes") unless token.attributes.empty?
         parse_error("end-tag-with-trailing-solidus") if token.self_closing
@@ -229,6 +240,30 @@ module HTMLParser
         @last_start_tag = token.name
       end
       @tokens << token
+    end
+
+    # Record the `<` (or equivalent) that opened the current tag/comment/doctype.
+    def note_markup_start!
+      @markup_line = @input_stream.last_line
+      @markup_column = @input_stream.last_column
+    end
+
+    def locate_new_token!(token)
+      token.line = @markup_line
+      token.column = @markup_column
+      token
+    end
+
+    def locate_emitted_token!(token)
+      return unless token.respond_to?(:line=)
+      return if token.line
+
+      if token.is_a?(CharacterToken) || token.is_a?(EOFToken)
+        token.line = @input_stream.last_line
+        token.column = @input_stream.last_column
+      else
+        locate_new_token!(token)
+      end
     end
 
     def emit_eof!
@@ -268,7 +303,7 @@ module HTMLParser
     end
 
     def new_doctype_token(name = nil)
-      @current_tag_token = DocTypeToken.new(name)
+      @current_tag_token = locate_new_token!(DocTypeToken.new(name))
     end
 
     def append_replacement_to_attribute_name!
@@ -288,7 +323,23 @@ module HTMLParser
     end
 
     def parse_error(code)
-      @parse_errors << ParseError.new(code)
+      @parse_errors << ParseError.new(
+        code,
+        line: @input_stream.last_line,
+        column: @input_stream.last_column
+      )
+    end
+
+    def new_start_tag_token
+      locate_new_token!(StartTagToken.new(+""))
+    end
+
+    def new_end_tag_token
+      locate_new_token!(EndTagToken.new(+""))
+    end
+
+    def new_comment_token(data = +"")
+      locate_new_token!(CommentToken.new(data))
     end
 
     def not_implemented(detail = nil)

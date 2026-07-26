@@ -9,6 +9,7 @@ module HTMLParser
         case consume_next_input_character
         when "<"
           # Switch to the script data less-than sign state.
+          note_markup_start!
           switch_to(:script_data_less_than_sign)
         when "\u0000"
           # This is an unexpected-null-character parse error. Emit a U+FFFD REPLACEMENT CHARACTER character token.
@@ -47,7 +48,7 @@ module HTMLParser
         case consume_next_input_character
         when /[a-z]/i
           # Create a new end tag token, set its tag name to the empty string. Reconsume in the script data end tag name state.
-          @current_tag_token = EndTagToken.new(+"")
+          @current_tag_token = new_end_tag_token
           reconsume(:script_data_end_tag_name)
         else
           # Emit a U+003C LESS-THAN SIGN character token and a U+002F SOLIDUS character token. Reconsume in the script data state.
@@ -124,6 +125,7 @@ module HTMLParser
           emit(CharacterToken.new("-"))
         when "<"
           # Switch to the script data escaped less-than sign state.
+          note_markup_start!
           switch_to(:script_data_escaped_less_than_sign)
         when "\u0000"
           # This is an unexpected-null-character parse error. Emit a U+FFFD REPLACEMENT CHARACTER character token.
@@ -148,6 +150,7 @@ module HTMLParser
           emit(CharacterToken.new("-"))
         when "<"
           # Switch to the script data escaped less-than sign state.
+          note_markup_start!
           switch_to(:script_data_escaped_less_than_sign)
         when "\u0000"
           # This is an unexpected-null-character parse error. Switch to the script data escaped state. Emit a U+FFFD REPLACEMENT CHARACTER character token.
@@ -173,6 +176,7 @@ module HTMLParser
           emit(CharacterToken.new("-"))
         when "<"
           # Switch to the script data escaped less-than sign state.
+          note_markup_start!
           switch_to(:script_data_escaped_less_than_sign)
         when ">"
           # Switch to the script data state. Emit a U+003E GREATER-THAN SIGN character token.
@@ -218,7 +222,7 @@ module HTMLParser
         case consume_next_input_character
         when /[a-z]/i
           # Create a new end tag token, set its tag name to the empty string. Reconsume in the script data escaped end tag name state.
-          @current_tag_token = EndTagToken.new(+"")
+          @current_tag_token = new_end_tag_token
           reconsume(:script_data_escaped_end_tag_name)
         else
           # Emit a U+003C LESS-THAN SIGN character token and a U+002F SOLIDUS character token. Reconsume in the script data escaped state.

@@ -12,6 +12,7 @@ module HTMLParser
           return_to_and_switch_to(:rcdata, :character_reference)
         when "<"
           # Switch to the RCDATA less-than sign state.
+          note_markup_start!
           switch_to(:rcdata_less_than_sign)
         when "\u0000"
           # This is an unexpected-null-character parse error. Emit a U+FFFD REPLACEMENT CHARACTER character token.
@@ -31,6 +32,7 @@ module HTMLParser
         case consume_next_input_character
         when "<"
           # Switch to the RAWTEXT less-than sign state.
+          note_markup_start!
           switch_to(:rawtext_less_than_sign)
         when "\u0000"
           # This is an unexpected-null-character parse error. Emit a U+FFFD REPLACEMENT CHARACTER character token.
@@ -80,7 +82,7 @@ module HTMLParser
         case consume_next_input_character
         when /[a-z]/i
           # Create a new end tag token, set its tag name to the empty string. Reconsume in the RCDATA end tag name state.
-          @current_tag_token = EndTagToken.new(+"")
+          @current_tag_token = new_end_tag_token
           reconsume(:rcdata_end_tag_name)
         else
           # Emit a U+003C LESS-THAN SIGN character token and a U+002F SOLIDUS character token. Reconsume in the RCDATA state.
@@ -146,7 +148,7 @@ module HTMLParser
         case consume_next_input_character
         when /[a-z]/i
           # Create a new end tag token, set its tag name to the empty string. Reconsume in the RAWTEXT end tag name state.
-          @current_tag_token = EndTagToken.new(+"")
+          @current_tag_token = new_end_tag_token
           reconsume(:rawtext_end_tag_name)
         else
           # Emit a U+003C LESS-THAN SIGN character token and a U+002F SOLIDUS character token. Reconsume in the RAWTEXT state.

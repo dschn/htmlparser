@@ -2,14 +2,26 @@
 
 module HTMLParser
   class ParseError
-    attr_reader :code
+    attr_reader :code, :line, :column
 
-    def initialize(code)
+    def initialize(code, line: nil, column: nil)
       @code = code.to_s
+      @line = line
+      @column = column
     end
 
     def ==(other)
-      other.is_a?(ParseError) && other.code == code
+      other.is_a?(ParseError) && other.code == code &&
+        other.line == line && other.column == column
+    end
+
+    # html5lib / WPT tree-construction `#errors` line form.
+    def to_html5lib
+      if line && column
+        "(#{line},#{column}): #{code}"
+      else
+        code
+      end
     end
   end
 

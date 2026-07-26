@@ -12,6 +12,7 @@ module HTMLParser
           return_to_and_switch_to(:data, :character_reference)
         when "<"
           # Switch to the tag open state.
+          note_markup_start!
           switch_to(:tag_open)
         when "\u0000"
           # This is an unexpected-null-character parse error. Emit the current input character as a character token.
@@ -37,12 +38,12 @@ module HTMLParser
           switch_to(:end_tag_open)
         when /[a-z]/i # ASCII alpha
           # Create a new start tag token, set its tag name to the empty string. Reconsume in the tag name state.
-          @current_tag_token = StartTagToken.new(+"")
+          @current_tag_token = new_start_tag_token
           reconsume(:tag_name)
         when "?"
           # This is an unexpected-question-mark-instead-of-tag-name parse error. Create a comment token whose data is the empty string. Reconsume in the bogus comment state.
           parse_error("unexpected-question-mark-instead-of-tag-name")
-          @comment_token = CommentToken.new(+"")
+          @comment_token = new_comment_token
           reconsume(:bogus_comment)
         when EOF
           # This is an eof-before-tag-name parse error. Emit a U+003C LESS-THAN SIGN character token and an end-of-file token.
@@ -62,7 +63,7 @@ module HTMLParser
         case consume_next_input_character
         when /[a-z]/i
           # Create a new end tag token, set its tag name to the empty string. Reconsume in the tag name state.
-          @current_tag_token = EndTagToken.new(+"")
+          @current_tag_token = new_end_tag_token
           reconsume(:tag_name)
         when ">"
           # This is a missing-end-tag-name parse error. Switch to the data state.
@@ -77,7 +78,7 @@ module HTMLParser
         else
           # This is an invalid-first-character-of-tag-name parse error. Create a comment token whose data is the empty string. Reconsume in the bogus comment state.
           parse_error("invalid-first-character-of-tag-name")
-          @comment_token = CommentToken.new(+"")
+          @comment_token = new_comment_token
           reconsume(:bogus_comment)
         end
       end

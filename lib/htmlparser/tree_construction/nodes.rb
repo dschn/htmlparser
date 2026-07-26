@@ -50,6 +50,13 @@ module HTMLParser
 
   # Result of the HTML fragment parsing algorithm (§13.4).
   class DocumentFragment < Node
+    attr_accessor :parse_errors
+
+    def initialize
+      super
+      @parse_errors = []
+    end
+
     def html5lib_dump
       lines = []
       children.each { |child| child.append_html5lib_dump(lines, 0) }
@@ -58,12 +65,13 @@ module HTMLParser
   end
 
   class Document < Node
-    attr_accessor :quirks_mode
+    attr_accessor :quirks_mode, :parse_errors
 
     def initialize
       super
       # :no_quirks | :quirks | :limited_quirks
       @quirks_mode = :no_quirks
+      @parse_errors = []
     end
 
     def html5lib_dump

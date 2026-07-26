@@ -1,4 +1,4 @@
-# html5lib/WPT tree-construction known failures — regenerate with:
+# html5lib/WPT tree-construction known failures (document dump) — regenerate with:
 #   bundle exec rake conformance:tree:baseline
 # Format: file<TAB>index<TAB>data_snippet
 processing-instructions.dat	100	<body><?start
