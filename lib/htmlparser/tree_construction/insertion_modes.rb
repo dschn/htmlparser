@@ -508,7 +508,14 @@ module HTMLParser
           stack_of_open_elements.pop
           acknowledge_self_closing_flag(token)
         when "hr"
+          # §13.2.6.4.7 — hr may separate options inside select.
           close_p_element if stack_of_open_elements.in_button_scope?("p")
+          if stack_of_open_elements.in_scope?("select")
+            generate_implied_end_tags
+            if stack_of_open_elements.in_scope?("option") || stack_of_open_elements.in_scope?("optgroup")
+              parse_error("unexpected-start-tag")
+            end
+          end
           insert_html_element(token)
           stack_of_open_elements.pop
           acknowledge_self_closing_flag(token)

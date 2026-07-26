@@ -115,8 +115,9 @@ module HTMLParser
     private
 
     def scope_exit_names(list)
+      # §13.2.4.2 — select is an in-scope barrier (customizable <select> / <hr> in select).
       base = %w[
-        applet caption html table td th marquee object template
+        applet caption html table td th marquee object select template
       ]
       case list
       when :button

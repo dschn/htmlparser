@@ -119,4 +119,16 @@ RSpec.describe HTMLParser::TreeConstruction do
       |       "foo"
     DUMP
   end
+
+  it "allows hr as a select option separator" do
+    doc = HTMLParser.parse("<select><option><hr>") {}
+    expect(doc.html5lib_dump).to eq(<<~DUMP.rstrip)
+      | <html>
+      |   <head>
+      |   <body>
+      |     <select>
+      |       <option>
+      |       <hr>
+    DUMP
+  end
 end
