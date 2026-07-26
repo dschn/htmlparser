@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "html5lib_tree_error_names"
+
 module HTMLParser
   class ParseError
     attr_reader :code
@@ -17,11 +19,13 @@ module HTMLParser
     end
 
     # html5lib / WPT tree-construction `#errors` line form.
-    def to_html5lib
+    # `tree: true` applies legacy fixture name aliases (tokenizer keeps WHATWG codes).
+    def to_html5lib(tree: false)
+      name = tree ? Html5libTreeErrorNames.alias_code(code) : code
       if line && column
-        "(#{line},#{column}): #{code}"
+        "(#{line},#{column}): #{name}"
       else
-        code
+        name
       end
     end
   end

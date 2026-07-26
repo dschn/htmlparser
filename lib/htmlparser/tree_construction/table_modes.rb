@@ -118,7 +118,7 @@ module HTMLParser
         code = case token
         when StartTagToken then "unexpected-start-tag-implies-table-voodoo"
         when EndTagToken then "unexpected-end-tag-implies-table-voodoo"
-        when CharacterToken then "unexpected-character-implies-table-voodoo"
+        when CharacterToken then "foster-parenting-character"
         else "unexpected-token-in-table"
         end
         # Character foster-parenting errors use the post-character cursor (nil token).
@@ -156,8 +156,8 @@ module HTMLParser
         if whitespace_string?(pending)
           insert_character(pending)
         else
-          # html5lib: unexpected-character-implies-table-voodoo (foster parenting).
-          parse_error("unexpected-character-implies-table-voodoo", nil)
+          # html5lib: foster-parenting-character (table anything-else / in-table-text flush).
+          parse_error("foster-parenting-character", nil)
           err = tokenizer.parse_errors.last
           if err && line && column
             err.line = line
