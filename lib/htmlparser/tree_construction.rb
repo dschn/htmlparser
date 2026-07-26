@@ -3,6 +3,7 @@
 require_relative "tree_construction/document"
 require_relative "tree_construction/open_elements"
 require_relative "tree_construction/helpers"
+require_relative "tree_construction/quirks"
 require_relative "tree_construction/active_formatting"
 require_relative "tree_construction/foreign_content"
 require_relative "tree_construction/insertion_modes"
@@ -19,6 +20,7 @@ module HTMLParser
   # (RCDATA / RAWTEXT / script data / PLAINTEXT) via Tokenizer#switch_to.
   class TreeConstruction
     include Helpers
+    include Quirks
     include ActiveFormatting
     include ForeignContent
     include InsertionModes

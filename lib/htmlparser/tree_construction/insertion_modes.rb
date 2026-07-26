@@ -23,7 +23,8 @@ module HTMLParser
           document.append_child(
             DocumentType.new(name, token.public_identifier, token.system_identifier)
           )
-          document.quirks_mode = :quirks if token.force_quirks || name.downcase != "html"
+          # §13.2.6.4.1 — quirks-mode-doctypes (public/system id lists).
+          document.quirks_mode = quirks_mode_for_doctype(token)
           @insertion_mode = :before_html
         when EOFToken
           parse_error("expected-doctype-but-got-eof")
@@ -478,7 +479,8 @@ module HTMLParser
           @active_formatting_elements << :marker
           @frameset_ok = false
         when "table"
-          close_p_element if document.quirks_mode == :no_quirks && stack_of_open_elements.in_button_scope?("p")
+          # In quirks mode only, a table may be a descendant of a p.
+          close_p_element if document.quirks_mode != :quirks && stack_of_open_elements.in_button_scope?("p")
           insert_html_element(token)
           @frameset_ok = false
           @insertion_mode = :in_table

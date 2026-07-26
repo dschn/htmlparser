@@ -195,10 +195,7 @@ module HTMLParser
       def process_foreign_content(token)
         case token
         when CharacterToken
-          data = token.value.tr("\u0000", "\uFFFD")
-          parse_error("unexpected-null-character") if token.value.include?("\u0000")
-          insert_character(data)
-          @frameset_ok = false unless whitespace_string?(data)
+          process_foreign_character(token)
         when CommentToken
           insert_comment(token)
         when DocTypeToken
@@ -206,7 +203,27 @@ module HTMLParser
         when StartTagToken
           process_foreign_start_tag(token)
         when EndTagToken
-          process_foreign_end_tag(token)
+          # End tags br/p share the HTML breakout path with the breakout start tags.
+          if %w[br p].include?(token.name)
+            unexpected_start_tag_in_foreign_content(token)
+          else
+            process_foreign_end_tag(token)
+          end
+        end
+      end
+
+      def process_foreign_character(token)
+        # Spec splits NULL / whitespace / any-other; null must not clear frameset-ok.
+        token.value.each_char do |char|
+          if char == "\u0000"
+            parse_error("unexpected-null-character")
+            insert_character("\uFFFD")
+          elsif whitespace_string?(char)
+            insert_character(char)
+          else
+            insert_character(char)
+            @frameset_ok = false
+          end
         end
       end
 

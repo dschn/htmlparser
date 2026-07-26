@@ -131,4 +131,17 @@ RSpec.describe HTMLParser::TreeConstruction do
       |       <hr>
     DUMP
   end
+
+  it "enters quirks mode for legacy DOCTYPE public ids" do
+    doc = HTMLParser.parse("<!DOCTYPE html PUBLIC \"html\"><p><table>") {}
+    expect(doc.quirks_mode).to eq(:quirks)
+    expect(doc.html5lib_dump).to eq(<<~DUMP.rstrip)
+      | <!DOCTYPE html "html" "">
+      | <html>
+      |   <head>
+      |   <body>
+      |     <p>
+      |       <table>
+    DUMP
+  end
 end
