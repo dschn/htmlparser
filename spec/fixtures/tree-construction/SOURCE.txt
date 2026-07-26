@@ -1,0 +1,3 @@
+WPT commit: 1985b47aa8972a970f005957f2bfa036da1787c6
+Canonical path: https://github.com/web-platform-tests/wpt/tree/master/html/syntax/parsing/resources
+html5lib-tests tree-construction moved here (see html5lib-tests README).
