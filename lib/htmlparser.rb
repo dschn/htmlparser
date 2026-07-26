@@ -40,11 +40,9 @@ module HTMLParser
     context_element = context_element_for_fragment(context)
     content_model = content_model_for_fragment_context(context_element, scripting: scripting)
     input_stream = InputStream.new(html)
-    tokenizer = Tokenizer.new(
-      input_stream,
-      content_model: content_model,
-      last_start_tag: context_element.name
-    )
+    # §13.4 — no start tag has been emitted, so there is no appropriate end tag in the
+    # fragment case (RCDATA/RAWTEXT/script end tags are treated as text).
+    tokenizer = Tokenizer.new(input_stream, content_model: content_model)
     TreeConstruction.new(tokenizer: tokenizer, context_element: context_element).call(&)
   end
 
