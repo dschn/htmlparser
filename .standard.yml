@@ -1,0 +1,22 @@
+# Standard Ruby — shared community style (https://github.com/standardrb/standard)
+ruby_version: 3.4
+
+# Parser-shaped exceptions: WHATWG state methods carry long verbatim comments
+# and branchy case statements. Don't fight the spec layout.
+ignore:
+  - "lib/htmlparser/tokenizer/**/*":
+      - Layout/LineLength
+      - Metrics/MethodLength
+      - Metrics/AbcSize
+      - Metrics/CyclomaticComplexity
+      - Metrics/PerceivedComplexity
+      - Metrics/ModuleLength
+      - Lint/DuplicateBranch
+  - "lib/htmlparser/tokenizer.rb":
+      - Metrics/ClassLength
+  - "bin/htmlparser":
+      - Metrics/MethodLength
+  - "spec/**/*":
+      - Metrics/BlockLength
+  - "Rakefile":
+      - Metrics/BlockLength

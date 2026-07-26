@@ -1,8 +1,70 @@
 # frozen_string_literal: true
 
-AllCops:
-  NewCops: enable
-  TargetRubyVersion: 3.4
+# Load Standard's ruleset so editors/tools that speak RuboCop still work.
+# Day-to-day: `bundle exec standardrb` (see .standard.yml for ignores).
+require:
+  - standard
+  - standard-custom
+  - standard-performance
+  - rubocop-performance
 
+inherit_gem:
+  standard: config/base.yml
+  standard-custom: config/base.yml
+  standard-performance: config/base.yml
+
+AllCops:
+  TargetRubyVersion: 3.4
+  SuggestExtensions: false
+  NewCops: enable
+  Exclude:
+    - "vendor/**/*"
+    - "tmp/**/*"
+
+# Mirror .standard.yml ignores for RuboCop CLI / IDE.
 Layout/LineLength:
-  Max: 120
+  Exclude:
+    - "lib/htmlparser/tokenizer/**/*"
+
+Metrics/MethodLength:
+  Exclude:
+    - "lib/htmlparser/tokenizer/**/*"
+    - "bin/htmlparser"
+
+Metrics/AbcSize:
+  Exclude:
+    - "lib/htmlparser/tokenizer/**/*"
+
+Metrics/CyclomaticComplexity:
+  Exclude:
+    - "lib/htmlparser/tokenizer/**/*"
+
+Metrics/PerceivedComplexity:
+  Exclude:
+    - "lib/htmlparser/tokenizer/**/*"
+
+Metrics/ModuleLength:
+  Exclude:
+    - "lib/htmlparser/tokenizer/**/*"
+
+Metrics/ClassLength:
+  Exclude:
+    - "lib/htmlparser/tokenizer.rb"
+
+Metrics/BlockLength:
+  Exclude:
+    - "spec/**/*"
+    - "Rakefile"
+
+Lint/DuplicateBranch:
+  Exclude:
+    - "lib/htmlparser/tokenizer/**/*"
+
+Style/Documentation:
+  Enabled: false
+
+Lint/EmptyClass:
+  AllowComments: true
+
+Gemspec/RequireMFA:
+  Enabled: false

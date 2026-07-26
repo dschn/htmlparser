@@ -1,29 +1,26 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# CLI for htmlparser gem. Usage: htmlparser test [path]
-# With no path, runs parser on test-html/*.html (when run from repo).
+# CLI for htmlparser gem. Usage: htmlparser test path
+# Smoke only — not a conformance suite. Prefer rake conformance:*.
 
 $LOAD_PATH.unshift(File.expand_path("../lib", __dir__))
 require "htmlparser"
-require "strscan"
 
 def run_test(path_or_dir)
   paths = if File.directory?(path_or_dir)
-            Dir[File.join(path_or_dir, "*.html")]
-          elsif File.file?(path_or_dir)
-            [path_or_dir]
-          else
-            warn "Not found: #{path_or_dir}"
-            return 1
-          end
+    Dir[File.join(path_or_dir, "*.html")]
+  elsif File.file?(path_or_dir)
+    [path_or_dir]
+  else
+    warn "Not found: #{path_or_dir}"
+    return 1
+  end
 
   paths.sort.each do |path|
     puts "=== #{path} ==="
     html = File.read(path)
-    input_stream = StringScanner.new(HTMLParser::Input.normalize(html))
-    tree = HTMLParser::TreeConstruction.new(tokenizer: HTMLParser::Tokenizer.new(input_stream))
-    tree.call
+    HTMLParser.parse(html)
     puts
   end
   0
@@ -32,10 +29,14 @@ end
 case ARGV[0]
 when "test"
   path = ARGV[1]
-  path ||= File.join(__dir__, "..", "test-html")
+  if path.nil? || path.empty?
+    warn "Usage: htmlparser test path"
+    warn "  path: file or directory of .html files"
+    exit 1
+  end
   exit run_test(path)
 else
-  warn "Usage: htmlparser test [path]"
-  warn "  path: file or directory of .html files (default: test-html/)"
+  warn "Usage: htmlparser test path"
+  warn "  path: file or directory of .html files"
   exit 1
 end

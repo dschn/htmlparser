@@ -1,0 +1,25 @@
+# Bundler
+.bundle/
+vendor/bundle/
+
+# Ruby / test
+coverage/
+tmp/
+*.gem
+*.rbc
+.doc/
+
+# RuboCop
+.rubocop-https---*
+
+# OS / editor
+.DS_Store
+*.swp
+*~
+.idea/
+.vscode/
+
+# Local editor / tooling
+.llm/
+.plans/
+.cursor/
