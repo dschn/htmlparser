@@ -4,6 +4,7 @@ require_relative "tree_construction/document"
 require_relative "tree_construction/open_elements"
 require_relative "tree_construction/helpers"
 require_relative "tree_construction/active_formatting"
+require_relative "tree_construction/foreign_content"
 require_relative "tree_construction/insertion_modes"
 require_relative "tree_construction/table_modes"
 
@@ -19,6 +20,7 @@ module HTMLParser
   class TreeConstruction
     include Helpers
     include ActiveFormatting
+    include ForeignContent
     include InsertionModes
     include TableModes
 
@@ -92,13 +94,17 @@ module HTMLParser
       guard = 0
       loop do
         @reprocess = false
-        method = :"process_#{@insertion_mode}"
-        if respond_to?(method, true)
-          send(method, token)
+        if foreign_content?(token)
+          process_foreign_content(token)
         else
-          # Unimplemented modes: degrade toward in body so the suite can progress.
-          @insertion_mode = :in_body
-          @reprocess = true
+          method = :"process_#{@insertion_mode}"
+          if respond_to?(method, true)
+            send(method, token)
+          else
+            # Unimplemented modes: degrade toward in body so the suite can progress.
+            @insertion_mode = :in_body
+            @reprocess = true
+          end
         end
         guard += 1
         raise "insertion-mode reprocess loop (#{@insertion_mode})" if guard > 64

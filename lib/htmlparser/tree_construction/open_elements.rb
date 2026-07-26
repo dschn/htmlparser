@@ -3,6 +3,10 @@
 module HTMLParser
   # Stack of open elements (§13.2.4.2).
   class OpenElements
+    # Foreign namespace elements that also terminate "in scope" walks.
+    MATHML_SCOPE_BARRIERS = %w[mi mo mn ms mtext annotation-xml].freeze
+    SVG_SCOPE_BARRIERS = %w[foreignObject desc title].freeze
+
     def initialize
       @elements = []
     end
@@ -63,10 +67,10 @@ module HTMLParser
 
     # Scope check by node identity (used by adoption agency).
     def element_in_scope?(element)
+      html_exits = scope_exit_names(:default)
       @elements.reverse_each do |el|
         return true if el.equal?(element)
-        return false if el.html? && scope_exit_names(:default).include?(el.name)
-        return false unless el.html?
+        return false if scope_barrier?(el, html_exits)
       end
       false
     end
@@ -79,21 +83,23 @@ module HTMLParser
       @elements.dup
     end
 
-    # §13.2.4.2 — element in scope (HTML variant).
+    # §13.2.4.2 — element in scope (and button / list-item variants).
     def in_scope?(target_names, list: :default)
       target_names = Array(target_names)
-      scope_exits = scope_exit_names(list)
+      html_exits = scope_exit_names(list)
       @elements.reverse_each do |el|
         return true if el.html? && target_names.include?(el.name)
-        return false if el.html? && scope_exits.include?(el.name)
-        # Non-HTML namespace elements also act as scope exits in the default list.
-        return false if list == :default && !el.html?
+        return false if scope_barrier?(el, html_exits)
       end
       false
     end
 
     def in_button_scope?(name)
       in_scope?(name, list: :button)
+    end
+
+    def in_list_item_scope?(name)
+      in_scope?(name, list: :list_item)
     end
 
     # §13.2.4.2 — element in table scope.
@@ -115,8 +121,23 @@ module HTMLParser
       case list
       when :button
         base + %w[button]
+      when :list_item
+        base + %w[ol ul]
       else
         base
+      end
+    end
+
+    # HTML specials plus MathML/SVG integration-point elements (§13.2.4.2).
+    def scope_barrier?(el, html_exits)
+      if el.html?
+        html_exits.include?(el.name)
+      elsif el.namespace == MATHML_NAMESPACE
+        MATHML_SCOPE_BARRIERS.include?(el.name)
+      elsif el.namespace == SVG_NAMESPACE
+        SVG_SCOPE_BARRIERS.include?(el.name)
+      else
+        false
       end
     end
   end

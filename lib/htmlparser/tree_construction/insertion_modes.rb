@@ -554,12 +554,12 @@ module HTMLParser
             generate_implied_end_tags(exclude: "rtc")
           end
           insert_html_element(token)
-        when "math", "svg"
+        when "math"
           reconstruct_active_formatting_elements
-          # Foreign content deferred — insert as HTML for now (wrong namespace).
-          insert_html_element(token)
-          stack_of_open_elements.pop if token.self_closing
-          acknowledge_self_closing_flag(token) if token.self_closing
+          enter_foreign(token, MATHML_NAMESPACE)
+        when "svg"
+          reconstruct_active_formatting_elements
+          enter_foreign(token, SVG_NAMESPACE)
         when "caption", "col", "colgroup", "frame", "head", "tbody", "td", "tfoot", "th", "thead", "tr"
           parse_error("unexpected-start-tag")
         else
@@ -674,12 +674,7 @@ module HTMLParser
       end
 
       def list_item_in_scope?
-        stack_of_open_elements.to_a.reverse_each do |el|
-          return true if el.html? && el.name == "li"
-          return false if el.html? && (%w[applet caption html table td th marquee object template] + %w[ol ul]).include?(el.name)
-          return false unless el.html?
-        end
-        false
+        stack_of_open_elements.in_list_item_scope?("li")
       end
 
       def special_category?(name)
