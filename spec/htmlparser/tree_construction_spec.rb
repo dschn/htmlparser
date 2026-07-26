@@ -86,4 +86,15 @@ RSpec.describe HTMLParser::TreeConstruction do
       | <span>
     DUMP
   end
+
+  it "dumps PI-shaped comments in html5lib <?target data?> form" do
+    doc = HTMLParser.parse("<body><?something good><?a$>") {}
+    expect(doc.html5lib_dump).to eq(<<~DUMP.rstrip)
+      | <html>
+      |   <head>
+      |   <body>
+      |     <?something good?>
+      |     <!-- ?a$ -->
+    DUMP
+  end
 end

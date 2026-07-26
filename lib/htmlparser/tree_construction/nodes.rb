@@ -163,7 +163,37 @@ module HTMLParser
 
     def append_html5lib_dump(lines, depth)
       indent = "  " * depth
-      lines << "| #{indent}<!-- #{data} -->"
+      # html5lib tree dump prints PI-shaped comments as <?target data?>.
+      lines << if (pi = html5lib_processing_instruction_dump)
+        "| #{indent}#{pi}"
+      else
+        "| #{indent}<!-- #{data} -->"
+      end
+    end
+
+    private
+
+    # Match the html5lib/WPT tree-construction dump heuristic for comments that
+    # came from <?...?> (bogus comment data starts with "?").
+    def html5lib_processing_instruction_dump
+      return unless data.start_with?("?")
+
+      rest = data[1..]
+      rest = rest.chop if rest.end_with?("?")
+      m = rest.match(/\A([A-Za-z_][A-Za-z0-9_-]*)([\s\S]*)\z/)
+      return unless m
+
+      target, payload = m[1], m[2]
+      return if target.match?(/\Axml/i)
+      return if !payload.empty? && !payload.start_with?("?", *"\t\n\f\r ".chars)
+
+      if payload.empty?
+        "<?#{target} ?>"
+      elsif payload.start_with?(*"\t\n\f\r ".chars)
+        "<?#{target}#{payload.sub(/\A[\t\n\f\r ]+/, " ")}?>"
+      else
+        "<?#{target} #{payload}?>"
+      end
     end
   end
 end
