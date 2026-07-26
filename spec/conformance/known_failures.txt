@@ -1,0 +1,3 @@
+# html5lib tokenizer known failures — regenerate with:
+#   bundle exec rake conformance:tokenizer:baseline
+# Format: relative_file<TAB>description<TAB>initial_state
