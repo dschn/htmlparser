@@ -83,6 +83,8 @@ module HTMLParser
     }.freeze
 
     attr_reader :parse_errors, :state, :last_start_tag
+    # Tree construction sets this so markup-declaration can enter CDATA in foreign content.
+    attr_accessor :adjusted_current_node_provider
 
     def initialize(input_stream, content_model: :data, last_start_tag: nil, parse_errors: nil)
       @input_stream = input_stream
@@ -98,6 +100,7 @@ module HTMLParser
       @halt = false
       @discard_attribute_value = false
       @skip_next_input_stream_error_report = false
+      @adjusted_current_node_provider = nil
     end
 
     def self.content_model_for_html5lib_state(name)

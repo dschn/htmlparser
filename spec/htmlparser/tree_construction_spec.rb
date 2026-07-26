@@ -97,4 +97,26 @@ RSpec.describe HTMLParser::TreeConstruction do
       |     <!-- ?a$ -->
     DUMP
   end
+
+  it "replaces an empty body with frameset when frameset-ok" do
+    doc = HTMLParser.parse("<!doctype html><p><frameset><frame>") {}
+    expect(doc.html5lib_dump).to eq(<<~DUMP.rstrip)
+      | <!DOCTYPE html>
+      | <html>
+      |   <head>
+      |   <frameset>
+      |     <frame>
+    DUMP
+  end
+
+  it "treats CDATA as text inside SVG" do
+    doc = HTMLParser.parse("<svg><![CDATA[foo]]>") {}
+    expect(doc.html5lib_dump).to eq(<<~DUMP.rstrip)
+      | <html>
+      |   <head>
+      |   <body>
+      |     <svg svg>
+      |       "foo"
+    DUMP
+  end
 end

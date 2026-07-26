@@ -38,9 +38,14 @@ module HTMLParser
         elsif next_characters_are?("[CDATA[")
           # Consume those characters. If there is an adjusted current node and it is not an element in the HTML namespace, then switch to the CDATA section state. Otherwise, this is a cdata-in-html-content parse error. Create a comment token whose data is the "[CDATA[" string. Switch to the bogus comment state.
           consume_characters(7)
-          parse_error("cdata-in-html-content")
-          @comment_token = CommentToken.new(+"[CDATA[")
-          switch_to(:bogus_comment)
+          node = @adjusted_current_node_provider&.call
+          if node && !node.html?
+            switch_to(:cdata_section)
+          else
+            parse_error("cdata-in-html-content")
+            @comment_token = CommentToken.new(+"[CDATA[")
+            switch_to(:bogus_comment)
+          end
         else
           # This is an incorrectly-opened-comment parse error. Create a comment token whose data is the empty string. Switch to the bogus comment state (don't consume anything in the current state).
           # Peeked next character may need an input-stream error before this tokenizer error

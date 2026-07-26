@@ -43,6 +43,8 @@ module HTMLParser
       @foster_parenting = false
       @pending_table_character_tokens = []
       @template_insertion_modes = []
+      # §13.2.5.42 — CDATA only when adjusted current node is non-HTML.
+      @tokenizer.adjusted_current_node_provider = method(:adjusted_current_node)
     end
 
     def fragment?

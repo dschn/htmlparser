@@ -367,7 +367,25 @@ module HTMLParser
             body.attributes[attr[:name]] ||= attr[:value]
           end
         when "frameset"
+          # §13.2.6.4.7 — frameset start tag (may replace the body).
           parse_error("unexpected-start-tag")
+          elements = stack_of_open_elements.to_a
+          second = elements[1]
+          if elements.size <= 1 || !(second&.html? && second.name == "body")
+            # ignore (fragment case / template)
+          elsif !@frameset_ok
+            # ignore
+          else
+            second.parent&.remove_child(second)
+            loop do
+              break if stack_of_open_elements.to_a.size <= 1
+              break if current_node&.html? && current_node.name == "html"
+
+              stack_of_open_elements.pop
+            end
+            insert_html_element(token)
+            @insertion_mode = :in_frameset
+          end
         when "address", "article", "aside", "blockquote", "center", "details", "dialog",
           "dir", "div", "dl", "fieldset", "figcaption", "figure", "footer", "header",
           "hgroup", "main", "menu", "nav", "ol", "p", "search", "section", "summary", "ul"
@@ -597,16 +615,26 @@ module HTMLParser
           parse_error("unexpected-end-tag") unless current_node&.name == token.name
           stack_of_open_elements.pop_until(token.name)
         when "form"
-          node = @form_element
-          @form_element = nil
-          if node.nil? || !stack_of_open_elements.to_a.include?(node)
-            parse_error("unexpected-end-tag")
-            return
-          end
-          generate_implied_end_tags
-          stack_of_open_elements.to_a.reverse_each do |el|
-            stack_of_open_elements.pop
-            break if el.equal?(node)
+          # §13.2.6.4.7 — end tag form (remove form from stack; leave descendants open).
+          if stack_of_open_elements.in_scope?("template")
+            @form_element = nil
+            unless stack_of_open_elements.in_scope?("form")
+              parse_error("unexpected-end-tag")
+              return
+            end
+            generate_implied_end_tags
+            parse_error("unexpected-end-tag") unless current_node&.html? && current_node.name == "form"
+            stack_of_open_elements.pop_until("form")
+          else
+            node = @form_element
+            @form_element = nil
+            if node.nil? || !stack_of_open_elements.element_in_scope?(node)
+              parse_error("unexpected-end-tag")
+              return
+            end
+            generate_implied_end_tags
+            parse_error("unexpected-end-tag") unless current_node.equal?(node)
+            stack_of_open_elements.remove(node)
           end
         when "p"
           unless stack_of_open_elements.in_button_scope?("p")
@@ -792,7 +820,11 @@ module HTMLParser
           end
         when EndTagToken
           if token.name == "html"
-            @insertion_mode = :after_after_body
+            if fragment? || stack_of_open_elements.include_html?("template")
+              parse_error("unexpected-end-tag")
+            else
+              @insertion_mode = :after_after_body
+            end
           else
             parse_error("unexpected-end-tag")
             @insertion_mode = :in_body
@@ -834,14 +866,23 @@ module HTMLParser
         end
       end
 
+      # §13.2.6.4.18 The "in frameset" insertion mode
       def process_in_frameset(token)
         case token
         when CharacterToken
-          insert_character(token.value) if whitespace_character_token?(token)
+          if whitespace_character_token?(token)
+            insert_character(token.value)
+          else
+            parse_error("unexpected-char")
+          end
         when CommentToken
           insert_comment(token)
+        when DocTypeToken
+          parse_error("unexpected-doctype")
         when StartTagToken
           case token.name
+          when "html"
+            process_in_body(token)
           when "frameset"
             insert_html_element(token)
           when "frame"
@@ -850,40 +891,84 @@ module HTMLParser
             acknowledge_self_closing_flag(token)
           when "noframes"
             process_in_head(token)
+          else
+            parse_error("unexpected-start-tag")
           end
         when EndTagToken
           if token.name == "frameset"
-            stack_of_open_elements.pop unless current_node&.name == "html"
-            @insertion_mode = :after_frameset unless current_node&.name == "frameset"
+            if current_node&.html? && current_node.name == "html"
+              parse_error("unexpected-end-tag")
+            else
+              stack_of_open_elements.pop
+              still_frameset = current_node&.html? && current_node.name == "frameset"
+              @insertion_mode = :after_frameset unless fragment? || still_frameset
+            end
+          else
+            parse_error("unexpected-end-tag")
+          end
+        when EOFToken
+          parse_error("eof-in-frameset") unless current_node&.html? && current_node.name == "html"
+          stop_parsing
+        end
+      end
+
+      # §13.2.6.4.19 The "after frameset" insertion mode
+      def process_after_frameset(token)
+        case token
+        when CharacterToken
+          if whitespace_character_token?(token)
+            insert_character(token.value)
+          else
+            parse_error("unexpected-char")
+          end
+        when CommentToken
+          insert_comment(token)
+        when DocTypeToken
+          parse_error("unexpected-doctype")
+        when StartTagToken
+          case token.name
+          when "html"
+            process_in_body(token)
+          when "noframes"
+            process_in_head(token)
+          else
+            parse_error("unexpected-start-tag")
+          end
+        when EndTagToken
+          if token.name == "html"
+            @insertion_mode = :after_after_frameset
+          else
+            parse_error("unexpected-end-tag")
           end
         when EOFToken
           stop_parsing
         end
       end
 
-      def process_after_frameset(token)
-        case token
-        when CharacterToken
-          insert_character(token.value) if whitespace_character_token?(token)
-        when CommentToken
-          insert_comment(token)
-        when StartTagToken
-          process_in_head(token) if token.name == "noframes"
-        when EndTagToken
-          @insertion_mode = :after_after_frameset if token.name == "html"
-        when EOFToken
-          stop_parsing
-        end
-      end
-
+      # §13.2.6.4.21 The "after after frameset" insertion mode
       def process_after_after_frameset(token)
         case token
         when CommentToken
           insert_comment(token, document)
+        when DocTypeToken
+          process_in_body(token)
         when CharacterToken
-          process_in_body(token) if whitespace_character_token?(token)
+          if whitespace_character_token?(token)
+            process_in_body(token)
+          else
+            parse_error("unexpected-char")
+          end
         when StartTagToken
-          process_in_head(token) if token.name == "noframes"
+          case token.name
+          when "html"
+            process_in_body(token)
+          when "noframes"
+            process_in_head(token)
+          else
+            parse_error("unexpected-start-tag")
+          end
+        when EndTagToken
+          parse_error("unexpected-end-tag")
         when EOFToken
           stop_parsing
         end
