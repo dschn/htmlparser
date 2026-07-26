@@ -2,7 +2,8 @@
 
 module HTMLParser
   class ParseError
-    attr_reader :code, :line, :column
+    attr_reader :code
+    attr_accessor :line, :column
 
     def initialize(code, line: nil, column: nil)
       @code = code.to_s

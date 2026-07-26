@@ -27,7 +27,13 @@ module HTMLParser
         when EndTagToken
           process_in_table_end_tag(token)
         when EOFToken
-          process_in_body(token)
+          # Template EOF must run in-template rules; otherwise html5lib wants eof-in-table.
+          if @template_insertion_modes.any?
+            process_in_template(token)
+          else
+            parse_error("eof-in-table") unless current_node&.html? && current_node.name == "html"
+            stop_parsing
+          end
         end
       end
 
@@ -57,7 +63,7 @@ module HTMLParser
           @insertion_mode = :in_table_body
           anything_else_reprocess(token)
         when "table"
-          parse_error("unexpected-start-tag")
+          parse_error("unexpected-start-tag-implies-end-tag")
           return unless stack_of_open_elements.in_table_scope?("table")
 
           stack_of_open_elements.pop_until("table")
@@ -70,13 +76,13 @@ module HTMLParser
           if type.nil? || !type.casecmp?("hidden")
             in_table_anything_else(token)
           else
-            parse_error("unexpected-start-tag")
+            parse_error("unexpected-hidden-input-in-table")
             insert_html_element(token)
             stack_of_open_elements.pop
             acknowledge_self_closing_flag(token)
           end
         when "form"
-          parse_error("unexpected-start-tag")
+          parse_error("unexpected-form-in-table")
           return if stack_of_open_elements.include_html?("template") || @form_element
 
           @form_element = insert_html_element(token)
@@ -93,6 +99,10 @@ module HTMLParser
             parse_error("unexpected-end-tag")
             return
           end
+          generate_implied_end_tags
+          unless current_node&.html? && current_node.name == "table"
+            parse_error("end-tag-too-early-named")
+          end
           stack_of_open_elements.pop_until("table")
           reset_insertion_mode_appropriately
         when "body", "caption", "col", "colgroup", "html", "tbody", "td", "tfoot", "th", "thead", "tr"
@@ -105,7 +115,14 @@ module HTMLParser
       end
 
       def in_table_anything_else(token)
-        parse_error("unexpected-token-in-table")
+        code = case token
+        when StartTagToken then "unexpected-start-tag-implies-table-voodoo"
+        when EndTagToken then "unexpected-end-tag-implies-table-voodoo"
+        when CharacterToken then "unexpected-character-implies-table-voodoo"
+        else "unexpected-token-in-table"
+        end
+        # Character foster-parenting errors use the post-character cursor (nil token).
+        parse_error(code, token.is_a?(CharacterToken) ? nil : token)
         process_as_in_body_with_foster_parenting(token)
       end
 
@@ -117,6 +134,8 @@ module HTMLParser
             parse_error("unexpected-null-character")
           else
             @pending_table_character_tokens << token.value
+            @pending_table_character_line = tokenizer.input_stream_line
+            @pending_table_character_column = tokenizer.input_stream_column
           end
         else
           flush_pending_table_character_tokens
@@ -127,13 +146,23 @@ module HTMLParser
 
       def flush_pending_table_character_tokens
         pending = @pending_table_character_tokens.join
+        line = @pending_table_character_line
+        column = @pending_table_character_column
         @pending_table_character_tokens = []
+        @pending_table_character_line = nil
+        @pending_table_character_column = nil
         return if pending.empty?
 
         if whitespace_string?(pending)
           insert_character(pending)
         else
-          parse_error("foster-parenting-characters")
+          # html5lib: unexpected-character-implies-table-voodoo (foster parenting).
+          parse_error("unexpected-character-implies-table-voodoo", nil)
+          err = tokenizer.parse_errors.last
+          if err && line && column
+            err.line = line
+            err.column = column
+          end
           pending.each_char do |char|
             process_as_in_body_with_foster_parenting(CharacterToken.new(char))
           end
