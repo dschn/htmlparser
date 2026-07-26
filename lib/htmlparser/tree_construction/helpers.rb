@@ -173,8 +173,14 @@ module HTMLParser
       end
 
       def parse_error(code, token = @current_token)
-        line = token&.line || tokenizer.input_stream_line
-        column = token&.column || tokenizer.input_stream_column
+        # html5lib `#errors` locations: character tokens use the character's
+        # column; tag/comment/doctype errors use the position after the token
+        # (the input stream's next-character cursor when the tree sees it).
+        line, column = if token.is_a?(CharacterToken) && token.line
+          [token.line, token.column]
+        else
+          [tokenizer.input_stream_line, tokenizer.input_stream_column]
+        end
         tokenizer.parse_errors << ParseError.new(code, line: line, column: column)
       end
 
