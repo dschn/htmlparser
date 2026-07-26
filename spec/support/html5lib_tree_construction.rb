@@ -168,7 +168,7 @@ module HTML5libTreeConstruction
       {
         ok: true,
         document: HTML5libTreeConstruction.serialize_document(tree),
-        errors: Array(tree.parse_errors).map { |e| e.to_html5lib(tree: true) },
+        errors: HTMLParser::Html5libTreeErrorNames.format_tree_errors(tree.parse_errors),
         error: nil
       }
     rescue HTMLParser::NotImplementedError, StandardError => e

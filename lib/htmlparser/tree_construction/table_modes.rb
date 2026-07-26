@@ -278,7 +278,8 @@ module HTMLParser
             insert_html_element(token)
             @insertion_mode = :in_row
           when "th", "td"
-            parse_error("unexpected-start-tag")
+            # html5lib: unexpected-cell-in-table-body
+            parse_error("unexpected-cell-in-table-body")
             clear_stack_back_to_table_body_context
             insert_html_element(StartTagToken.new("tr"))
             @insertion_mode = :in_row

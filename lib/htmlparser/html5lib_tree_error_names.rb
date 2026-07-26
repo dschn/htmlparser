@@ -7,9 +7,8 @@ module HTMLParser
   # Tokenizer conformance keeps the WHATWG codes on `ParseError#code`. Only the
   # tree harness serializes through these aliases (see `ParseError#to_html5lib`).
   module Html5libTreeErrorNames
-    # Majority, non-regressing aliases against the current scripting-off suite.
+    # Majority, non-regressing 1:1 aliases.
     ALIASES = {
-      "eof-in-text" => "expected-named-closing-tag-but-got-eof",
       "unexpected-null-character" => "invalid-codepoint",
       "control-character-reference" => "illegal-codepoint-for-numeric-entity",
       "missing-semicolon-after-character-reference" => "named-entity-without-semicolon",
@@ -20,10 +19,87 @@ module HTMLParser
       "expected-closing-tag-but-got-others" => "unexpected-end-tag"
     }.freeze
 
+    DOUBLE_ESCAPED_SCRIPT_STATES = %i[
+      script_data_double_escaped
+      script_data_double_escaped_dash
+      script_data_double_escaped_dash_dash
+      script_data_double_escaped_less_than_sign
+      script_data_double_escape_end
+    ].freeze
+
     module_function
 
     def alias_code(code)
       ALIASES.fetch(code.to_s, code.to_s)
     end
+
+    # Serialize a parse-error list for tree `#errors`, applying pair-aware script EOF aliases.
+    def format_tree_errors(errors)
+      errors = Array(errors)
+      out = []
+      i = 0
+      while i < errors.length
+        err = errors[i]
+        nxt = errors[i + 1]
+
+        if script_eof_pair?(err, nxt)
+          first, second = script_eof_pair_names(err)
+          out << format_error(err, first)
+          out << format_error(nxt, second)
+          i += 2
+          next
+        end
+
+        code = case err.code
+        when "eof-in-text"
+          "expected-named-closing-tag-but-got-eof"
+        when "eof-in-script-html-comment-like-text"
+          script_eof_solo_name(err)
+        else
+          alias_code(err.code)
+        end
+        out << format_error(err, code)
+        i += 1
+      end
+      out
+    end
+
+    def script_eof_pair?(err, nxt)
+      nxt &&
+        err.code == "eof-in-script-html-comment-like-text" &&
+        nxt.code == "eof-in-text"
+    end
+    private_class_method :script_eof_pair?
+
+    # Majority mapping from tokenizer state → html5lib fixture pair.
+    def script_eof_pair_names(err)
+      state = err.tokenizer_state
+      if DOUBLE_ESCAPED_SCRIPT_STATES.include?(state)
+        ["eof-in-script-in-script", "expected-named-closing-tag-but-got-eof"]
+      else
+        # script_data_escaped* — majority fixtures want named-closing then text-mode EOF.
+        ["expected-named-closing-tag-but-got-eof", "unexpected-eof-in-text-mode"]
+      end
+    end
+    private_class_method :script_eof_pair_names
+
+    def script_eof_solo_name(err)
+      state = err.tokenizer_state
+      if DOUBLE_ESCAPED_SCRIPT_STATES.include?(state)
+        "eof-in-script-in-script"
+      else
+        "expected-script-data-but-got-eof"
+      end
+    end
+    private_class_method :script_eof_solo_name
+
+    def format_error(err, code)
+      if err.line && err.column
+        "(#{err.line},#{err.column}): #{code}"
+      else
+        code
+      end
+    end
+    private_class_method :format_error
   end
 end

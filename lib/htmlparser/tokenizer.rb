@@ -323,10 +323,17 @@ module HTMLParser
     end
 
     def parse_error(code)
+      # EOF errors use the post-last-character cursor; others use the bad character.
+      line, column = if @current_input_character == EOF
+        [@input_stream.line, @input_stream.column]
+      else
+        [@input_stream.last_line, @input_stream.last_column]
+      end
       @parse_errors << ParseError.new(
         code,
-        line: @input_stream.last_line,
-        column: @input_stream.last_column
+        line: line,
+        column: column,
+        tokenizer_state: @state
       )
     end
 
