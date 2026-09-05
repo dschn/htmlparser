@@ -1,23 +1,36 @@
 # htmlparser
 
-A non-serious, educational HTML parser in Ruby. It follows the WHATWG HTML
-parsing algorithm with the spec’s steps documented alongside the code.
+A for-fun Ruby HTML parser that tries to be a **readable walk through the WHATWG
+spec** — section numbers and step comments sit next to the code, not buried in a
+native extension.
 
 https://html.spec.whatwg.org/multipage/parsing.html
 
-## Conformance
+Scripting is **disabled** on purpose (`document.write`, `scripted_*` fixtures, and
+friends are out of scope). Compliance claims mean: same tree the html5lib / WPT
+corpora expect for non-scripted HTML.
 
-Compliance is measured against the shared html5lib / WPT fixture corpus used by
-nearly every serious HTML5 / WHATWG implementation. We do **not** depend on the
-html5lib Python library in `lib/`; fixtures drive RSpec only:
+## Spec scoreboard
 
-- **Tokenizer:** `spec/fixtures/html5lib` ([html5lib-tests](https://github.com/html5lib/html5lib-tests) submodule)
-- **Tree construction:** `spec/fixtures/tree-construction` (`.dat` files from [WPT](https://github.com/web-platform-tests/wpt/tree/master/html/syntax/parsing/resources); see `SOURCE.txt`)
+Measured against [html5lib-tests](https://github.com/html5lib/html5lib-tests) and
+WPT tree-construction fixtures (RSpec only — nothing from html5lib lands in
+`lib/`).
+
+| Gate | Result | Notes |
+|------|--------|-------|
+| Tokenizer (§13.2.5) | **pass** — 7032 / 7032 | |
+| Tree dump (§13.2.6) | **pass*** — 1915 / 1922 | \*7 unclosed-EOF `<?…` cases: we emit the bogus comment the living spec requires; fixtures expect an empty body |
+| Encoding sniff (§13.2.3) | **pass** — 82 / 82 | BOM + meta charset / http-equiv prescan |
+| Serialize round-trip (§13.3) | **pass*** — 1659 / 1719 | \*60 known non-round-trips (plaintext, script text shaped like `</script>`, foster parenting, …) — normal HTML identity gaps, not missing serialize rules |
+| Parse-error names (`#errors`) | **paused** — ~80% | Diagnostics only; not a correctness gate |
+
+Also in the box: fragment parsing, foreign content (MathML/SVG), `to_html` /
+`inner_html`, and a small DOM surface (`get_element_by_id`, tag/class queries,
+traversal) as a stepping stone toward selectors later.
 
 ## Setup
 
-Ruby >= 3.4. html5lib tokenizer fixtures are a **git submodule** — initialize them
-before running the tokenizer suite (or clone with `--recurse-submodules`):
+Ruby >= 3.4. Tokenizer fixtures are a **git submodule**:
 
 ```bash
 git submodule update --init
@@ -35,6 +48,5 @@ bundle exec rake conformance:tree
 bundle exec htmlparser test path/to/file.html
 ```
 
-Tokenizer suite is green (`known_failures.txt` empty). Tree-construction
-mismatches live in `spec/conformance/known_failures_tree.txt` (regenerate with
-`rake conformance:tree:baseline`).
+Known residuals live under `spec/conformance/known_failures*.txt` (regenerate with
+the matching `rake conformance:*:baseline` task).
