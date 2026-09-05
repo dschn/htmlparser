@@ -7,11 +7,12 @@ RSpec.describe HTMLParser::TreeConstruction do
     tokens = []
     HTMLParser.parse("Hi") { |token| tokens << token }
 
+    # Data state coalesces non-whitespace runs into one CharacterToken.
     expect(tokens.map(&:class)).to eq([
-      HTMLParser::CharacterToken,
       HTMLParser::CharacterToken,
       HTMLParser::EOFToken
     ])
+    expect(tokens.first.value).to eq("Hi")
   end
 
   it "exposes an open elements stack" do

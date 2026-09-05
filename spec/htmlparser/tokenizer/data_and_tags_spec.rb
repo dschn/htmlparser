@@ -14,8 +14,8 @@ RSpec.describe "Tokenizer data and tags" do
   it "emits character tokens and EOF for plain text" do
     result = tokens_of("Hi")
     expect(result[0]).to be_a(HTMLParser::CharacterToken)
-    expect(result[0].value).to eq("H")
-    expect(result[1].value).to eq("i")
+    # Data state coalesces non-whitespace runs (html5lib-style).
+    expect(result[0].value).to eq("Hi")
     expect(result.last).to be_a(HTMLParser::EOFToken)
   end
 
