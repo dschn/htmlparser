@@ -281,7 +281,12 @@ module HTMLParser
             @insertion_mode = :in_row
             anything_else_reprocess(token)
           when "caption", "col", "colgroup", "tbody", "tfoot", "thead"
-            return unless stack_of_open_elements.in_table_scope?(%w[tbody thead tfoot])
+            # §13.2.6.4.13 — not in table-body scope: parse error; ignore.
+            # html5lib: unexpected-start-tag (or nameless XXX-undefined-error).
+            unless stack_of_open_elements.in_table_scope?(%w[tbody thead tfoot])
+              parse_error("unexpected-start-tag")
+              return
+            end
 
             clear_stack_back_to_table_body_context
             stack_of_open_elements.pop
@@ -301,7 +306,11 @@ module HTMLParser
             stack_of_open_elements.pop
             @insertion_mode = :in_table
           when "table"
-            return unless stack_of_open_elements.in_table_scope?(%w[tbody thead tfoot])
+            # §13.2.6.4.13 — no tbody/thead/tfoot in table scope: parse error; ignore.
+            unless stack_of_open_elements.in_table_scope?(%w[tbody thead tfoot])
+              parse_error("unexpected-end-tag")
+              return
+            end
 
             clear_stack_back_to_table_body_context
             stack_of_open_elements.pop
@@ -328,7 +337,12 @@ module HTMLParser
             @insertion_mode = :in_cell
             @active_formatting_elements << :marker
           when "caption", "col", "colgroup", "tbody", "tfoot", "thead", "tr"
-            return unless stack_of_open_elements.in_table_scope?("tr")
+            # §13.2.6.4.14 — no tr in table scope: parse error; ignore.
+            # html5lib: unexpected-start-tag (or nameless XXX-undefined-error).
+            unless stack_of_open_elements.in_table_scope?("tr")
+              parse_error("unexpected-start-tag")
+              return
+            end
 
             clear_stack_back_to_table_row_context
             stack_of_open_elements.pop
@@ -348,7 +362,11 @@ module HTMLParser
             stack_of_open_elements.pop
             @insertion_mode = :in_table_body
           when "table"
-            return unless stack_of_open_elements.in_table_scope?("tr")
+            # §13.2.6.4.14 — no tr in table scope: parse error; ignore.
+            unless stack_of_open_elements.in_table_scope?("tr")
+              parse_error("unexpected-end-tag")
+              return
+            end
 
             clear_stack_back_to_table_row_context
             stack_of_open_elements.pop
