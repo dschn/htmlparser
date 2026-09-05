@@ -216,7 +216,7 @@ module HTMLParser
         # Spec splits NULL / whitespace / any-other; null must not clear frameset-ok.
         token.value.each_char do |char|
           if char == "\u0000"
-            parse_error("unexpected-null-character")
+            parse_error("invalid-codepoint-in-foreign-content")
             insert_character("\uFFFD")
           elsif whitespace_string?(char)
             insert_character(char)

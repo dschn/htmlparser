@@ -20,9 +20,6 @@ comments01.dat	9	FOO<!--->BAZ
 doctype01.dat	10	<!DOCTYPE potato sYstEM >Hello
 doctype01.dat	11	<!DOCTYPE potato sYstEM ggg>Hello
 doctype01.dat	12	<!DOCTYPE potato SYSTEM taco >Hello
-doctype01.dat	13	<!DOCTYPE potato SYSTEM 'taco"'>Hello
-doctype01.dat	14	<!DOCTYPE potato SYSTEM "taco">Hello
-doctype01.dat	15	<!DOCTYPE potato SYSTEM "tai'co">Hello
 doctype01.dat	16	<!DOCTYPE potato SYSTEMtaco "ddd">Hello
 doctype01.dat	17	<!DOCTYPE potato grass SYSTEM taco>Hello
 doctype01.dat	18	<!DOCTYPE potato pUbLIc>Hello
@@ -30,25 +27,15 @@ doctype01.dat	19	<!DOCTYPE potato pUbLIc >Hello
 doctype01.dat	2	<!DOCTYPEhtml>Hello
 doctype01.dat	20	<!DOCTYPE potato pUbLIcgoof>Hello
 doctype01.dat	21	<!DOCTYPE potato PUBLIC goof>Hello
-doctype01.dat	22	<!DOCTYPE potato PUBLIC "go'of">Hello
 doctype01.dat	23	<!DOCTYPE potato PUBLIC 'go'of'>Hello
-doctype01.dat	24	<!DOCTYPE potato PUBLIC 'go:hh of' >Hello
 doctype01.dat	25	<!DOCTYPE potato PUBLIC "W3C-//dfdf" SYSTEM ggg>Hello
-doctype01.dat	26	<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/st
-doctype01.dat	27	<!DOCTYPE ...>Hello
-doctype01.dat	28	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.or
-doctype01.dat	29	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR
 doctype01.dat	3	<!DOCTYPE>Hello
 doctype01.dat	30	<!DOCTYPE root-element [SYSTEM OR PUBLIC FPI] "uri" [ <!-- internal declarations
-doctype01.dat	31	<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapfor
-doctype01.dat	32	<!DOCTYPE HTML SYSTEM "http://www.w3.org/DTD/HTML4-strict.dtd"><body><b>Mine!</b
 doctype01.dat	33	<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN""http://www.w3.org/TR/html4/str
 doctype01.dat	34	<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"'http://www.w3.org/TR/html4/str
 doctype01.dat	35	<!DOCTYPE HTML PUBLIC"-//W3C//DTD HTML 4.01//EN"'http://www.w3.org/TR/html4/stri
 doctype01.dat	36	<!DOCTYPE HTML PUBLIC'-//W3C//DTD HTML 4.01//EN''http://www.w3.org/TR/html4/stri
 doctype01.dat	4	<!DOCTYPE >Hello
-doctype01.dat	5	<!DOCTYPE potato>Hello
-doctype01.dat	6	<!DOCTYPE potato >Hello
 doctype01.dat	7	<!DOCTYPE potato taco>Hello
 doctype01.dat	8	<!DOCTYPE potato taco "ddd>Hello
 doctype01.dat	9	<!DOCTYPE potato sYstEM>Hello
@@ -57,12 +44,8 @@ domjs-unsafe.dat	14	<script type="data"><!--<script>\u0000</script></script>
 domjs-unsafe.dat	15	<script type="data"><!--<script>-\u0000</script></script>
 domjs-unsafe.dat	16	<script type="data"><!--<script>--\u0000</script></script>
 domjs-unsafe.dat	3	<script>a='\u0000'</script>
-domjs-unsafe.dat	35	<table><colgroup><html></colgroup></table>
 domjs-unsafe.dat	36	<table><colgroup> foo</colgroup></table>
-domjs-unsafe.dat	38	<select><html></select>
-domjs-unsafe.dat	39	<frameset><html></frameset>
 domjs-unsafe.dat	4	<script type="data"><!--\u0000</script>
-domjs-unsafe.dat	40	<frameset></frameset><html>
 domjs-unsafe.dat	46	<svg><font size=4></font></svg>
 domjs-unsafe.dat	47	<svg><font color=red></font></svg>
 domjs-unsafe.dat	5	<script type="data"><!--foo\u0000</script>
@@ -216,10 +199,7 @@ plain-text-unsafe.dat	6	<html><select>\u0000
 plain-text-unsafe.dat	7	\u0000
 plain-text-unsafe.dat	8	<body>\u0000
 plain-text-unsafe.dat	9	<plaintext>\u0000filler\u0000text\u0000
-quirks01.dat	0	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR
-quirks01.dat	1	<!DOCTYPE html SYSTEM "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dt
 quirks01.dat	2	<!DOCTYPE html PUBLIC "html"><p><table>
-quirks01.dat	3	<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN" "http://www.w3.org/TR/html4/str
 ruby.dat	11	<html><ruby>a<rtc>b<rt>c<rt>d</ruby></html>
 ruby.dat	13	<html><ruby>a<rtc>b<rp></ruby></html>
 scriptdata01.dat	0	FOO<script>'Hello'</script>BAR
@@ -286,13 +266,9 @@ tests1.dat	55	<!DOCTYPE html><font><table></font></table></font>
 tests1.dat	77	<a href="blah">aba<table><a href="foo">br<tr><td></td></tr>x</table>aoe
 tests1.dat	78	<a href="blah">aba<table><tr><td><a href="foo">br</td></tr>x</table>aoe
 tests1.dat	79	<table><a href="blah">aba<tr><td><a href="foo">br</td></tr>x</table>aoe
-tests1.dat	85	<head><meta></head><link>
 tests1.dat	89	<p><image></p>
 tests1.dat	90	<a><table><a></table><p><a><div><a>
 tests1.dat	92	<head></html><meta><p>
-tests14.dat	2	<!DOCTYPE html><html><html abc:def=gh><xyz:abc></xyz:abc>
-tests14.dat	3	<!DOCTYPE html><html xml:lang=bar><html xml:lang=foo>
-tests14.dat	5	<!DOCTYPE html><html 123=456><html 789=012>
 tests15.dat	12	<frame></frame></frame><frameset><frame><frameset><frame></frameset><noframes></
 tests15.dat	13	<!DOCTYPE html><object></html>
 tests15.dat	2	<!doctype html></html> <head>
@@ -321,20 +297,12 @@ tests16.dat	59	<!doctype html><script><!--<script --></script/
 tests16.dat	69	<!doctype html><script><!--<script>--!></script>X
 tests17.dat	0	<!doctype html><table><tbody><select><tr>
 tests17.dat	1	<!doctype html><table><tr><select><td>
-tests17.dat	10	<!doctype html><select><tfoot>
-tests17.dat	11	<!doctype html><select><caption>
 tests17.dat	2	<!doctype html><table><tr><td><select><td>
 tests17.dat	3	<!doctype html><table><tr><th><select><td>
 tests17.dat	4	<!doctype html><table><caption><select><tr>
-tests17.dat	5	<!doctype html><select><tr>
-tests17.dat	6	<!doctype html><select><td>
-tests17.dat	7	<!doctype html><select><th>
-tests17.dat	8	<!doctype html><select><tbody>
-tests17.dat	9	<!doctype html><select><thead>
 tests18.dat	12	<!doctype html><table><colgroup><plaintext></plaintext>
 tests18.dat	23	<!doctype html><table><tr><style></script></style>abc
 tests18.dat	24	<!doctype html><table><tr><script></style></script>abc
-tests18.dat	27	<!doctype html><select><script></style></script>abc
 tests18.dat	7	<!doctype html><table><plaintext></plaintext>
 tests18.dat	8	<!doctype html><table><tbody><plaintext></plaintext>
 tests18.dat	9	<!doctype html><table><tbody><tr><plaintext></plaintext>
@@ -343,18 +311,14 @@ tests19.dat	17	<html><ruby>a<rtc>b<rt>c<rb>d</ruby></html>
 tests19.dat	20	<!doctype html><div></body><!--foo-->
 tests19.dat	24	<!doctype html><table>abc<!--foo-->
 tests19.dat	26	<!doctype html><table> b <!--foo-->
-tests19.dat	27	<!doctype html><select><option><option>
 tests19.dat	28	<!doctype html><select><option></optgroup>
 tests19.dat	35	<!doctype html><frameset></noframes>
-tests19.dat	36	<!doctype html><html c=d><body></html><html a=b>
-tests19.dat	37	<!doctype html><html c=d><frameset></frameset></html><html a=b>
 tests19.dat	40	<!doctype html><html><frameset></frameset></html>abc
 tests19.dat	41	<!doctype html><html><frameset></frameset></html><p>
 tests19.dat	42	<!doctype html><html><frameset></frameset></html></p>
 tests19.dat	75	<!doctype html><svg>a</svg><frameset><frame>
 tests19.dat	81	<!doctype html><p><math></p>a
 tests19.dat	83	<!doctype html><math></html>
-tests19.dat	87	<!doctype html><html a=b><head></head><html c=d>
 tests19.dat	88	<!doctype html><image/>
 tests19.dat	89	<!doctype html>a<i>b<table>c<b>d</i>e</b>f
 tests2.dat	1	<textarea>test</div>test
@@ -376,14 +340,9 @@ tests2.dat	28	<!doctypehtml><p><form>
 tests2.dat	30	&AMP
 tests2.dat	31	&AMp;
 tests2.dat	33	<!DOCTYPE html>X</body>X
-tests2.dat	36	<!DOCTYPE html><select><option><optgroup>
-tests2.dat	38	<!DOCTYPE html><select><optgroup><option><optgroup>
 tests2.dat	4	<frame>test
 tests2.dat	45	test test
 tests2.dat	5	<!DOCTYPE html><frameset>test
-tests2.dat	52	<!DOCTYPE html><html><body><html id=x>
-tests2.dat	53	<!DOCTYPE html>X</body><html id="x">
-tests2.dat	54	<!DOCTYPE html><head><html id=x>
 tests2.dat	55	<!DOCTYPE html>X</html>X
 tests2.dat	57	<!DOCTYPE html>X</html><p>X
 tests2.dat	59	<!DOCTYPE html><!--x--
@@ -428,12 +387,9 @@ tests25.dat	9	<!DOCTYPE html><body><frame>A
 tests26.dat	14	<!DOCTYPE html><body><div><!/div>a
 tests26.dat	2	<!DOCTYPE html><body><b><nobr>1<table><nobr></b><i><nobr>2<nobr></i>3
 tests26.dat	9	<p><code x</code></p> 
-tests3.dat	0	<head></head><style></style>
-tests3.dat	1	<head></head><script></script>
 tests3.dat	12	<!DOCTYPE html><HTML><META><HEAD></HEAD></HTML>
 tests3.dat	13	<!DOCTYPE html><HTML><HEAD><head></HEAD></HTML>
 tests3.dat	14	<textarea>foo<span>bar</span><i>baz
-tests3.dat	2	<head></head><!-- --><style></style><!-- --><script></script>
 tests6.dat	11	<frameset></frameset> </div>
 tests6.dat	17	</caption><div>
 tests6.dat	18	<table><caption><div></caption>
@@ -456,16 +412,11 @@ tests6.dat	50	</html><frameset></frameset>
 tests6.dat	51	</body><frameset></frameset>
 tests6.dat	7	<frameset></frameset> foo
 tests6.dat	9	<frameset></frameset> <div>
-tests7.dat	2	<!doctype html><head></head><title>X</title>
 tests7.dat	23	<!doctype html><table><select>X<tr>
 tests7.dat	27	<body>X</body></body>
-tests7.dat	3	<!doctype html></head><title>X</title>
 tests7.dat	30	<table><b><tr><td>aaa</td></tr>bbb</table>ccc
 tests7.dat	31	A<table><tr> B</tr> B</table>
 tests7.dat	32	A<table><tr> B</tr> </em>C</table>
-tests7.dat	4	<!doctype html></head><base>X
-tests7.dat	5	<!doctype html></head><basefont>X
-tests7.dat	6	<!doctype html></head><bgsound>X
 tests7.dat	8	<!doctype html><table>X<tr><td><table> <meta></table></table>
 tests8.dat	4	<table><div>x<div></div>x</span>x
 tests8.dat	6	x<table>x
@@ -481,7 +432,6 @@ tests_innerHTML_1.dat	23	<span></caption><span>
 tests_innerHTML_1.dat	24	<span><caption><span>
 tests_innerHTML_1.dat	25	<span><col><span>
 tests_innerHTML_1.dat	26	<span><colgroup><span>
-tests_innerHTML_1.dat	27	<span><html><span>
 tests_innerHTML_1.dat	28	<span><tbody><span>
 tests_innerHTML_1.dat	29	<span><td><span>
 tests_innerHTML_1.dat	30	<span><tfoot><span>
@@ -545,7 +495,6 @@ webkit01.dat	23	<html><body></body></html>x<!-- Hi there -->
 webkit01.dat	24	<html><body></body></html>x<!-- Hi there --></html><!-- Again -->
 webkit01.dat	25	<html><body></body></html>x<!-- Hi there --></body></html><!-- Again -->
 webkit01.dat	3	<di
-webkit01.dat	35	<head></head> <style></style>ddd
 webkit01.dat	43	<svg><title><svg><div>
 webkit01.dat	44	<img <="" FAIL>
 webkit01.dat	45	<ul><li><div id='foo'/>A</li><li>B<div>C</div></li></ul>

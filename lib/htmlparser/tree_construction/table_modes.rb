@@ -133,7 +133,7 @@ module HTMLParser
         case token
         when CharacterToken
           if token.value == "\u0000"
-            parse_error("unexpected-null-character")
+            parse_error("invalid-codepoint-in-table-text")
           else
             @pending_table_character_tokens << token.value
             @pending_table_character_line = tokenizer.input_stream_line

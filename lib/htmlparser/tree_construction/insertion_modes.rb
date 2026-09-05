@@ -20,8 +20,15 @@ module HTMLParser
           insert_comment(token, document)
         when DocTypeToken
           name = token.name || ""
+          public_id = token.public_identifier
+          system_id = token.system_identifier
+          # §13.2.6.4.1 — parse error unless name is html and ids are missing
+          # (system id may be "about:legacy-compat"). html5lib: unknown-doctype.
+          html_name = name.downcase == "html"
+          legacy_system = system_id.nil? || system_id == "about:legacy-compat"
+          parse_error("unknown-doctype") unless html_name && public_id.nil? && legacy_system
           document.append_child(
-            DocumentType.new(name, token.public_identifier, token.system_identifier)
+            DocumentType.new(name, public_id, system_id)
           )
           # §13.2.6.4.1 — quirks-mode-doctypes (public/system id lists).
           document.quirks_mode = quirks_mode_for_doctype(token)
@@ -282,7 +289,7 @@ module HTMLParser
             insert_html_element(token)
             @insertion_mode = :in_frameset
           when "base", "basefont", "bgsound", "link", "meta", "noframes", "script", "style", "template", "title"
-            parse_error("unexpected-start-tag")
+            parse_error("unexpected-start-tag-out-of-my-head")
             stack_of_open_elements.push(@head_element) if @head_element
             process_in_head(token)
             stack_of_open_elements.remove(@head_element) if @head_element
@@ -320,7 +327,13 @@ module HTMLParser
             return if token.value == "\n"
           end
           if token.value == "\u0000"
-            parse_error("unexpected-null-character")
+            # Tokenizer already reported invalid-codepoint; html5lib adds a mode name.
+            code = if stack_of_open_elements.include_html?("select")
+              "invalid-codepoint-in-select"
+            else
+              "invalid-codepoint-in-body"
+            end
+            parse_error(code)
             return
           end
           reconstruct_active_formatting_elements
@@ -340,7 +353,9 @@ module HTMLParser
           else
             # §13.2.6.4.7 — EOF in body: parse error if a non-exempt node is open.
             # html5lib names this expected-closing-tag-but-got-eof.
-            unless stack_of_open_elements.to_a.all? { |el| eof_in_body_allowed?(el) }
+            if stack_of_open_elements.include_html?("select")
+              parse_error("eof-in-select")
+            elsif !stack_of_open_elements.to_a.all? { |el| eof_in_body_allowed?(el) }
               parse_error("expected-closing-tag-but-got-eof")
             end
             stop_parsing
@@ -360,7 +375,7 @@ module HTMLParser
       def process_in_body_start_tag(token)
         case token.name
         when "html"
-          parse_error("unexpected-start-tag")
+          parse_error("non-html-root")
           return if stack_of_open_elements.include_html?("template")
 
           html = stack_of_open_elements.first_html("html")
@@ -609,7 +624,12 @@ module HTMLParser
           reconstruct_active_formatting_elements
           enter_foreign(token, SVG_NAMESPACE)
         when "caption", "col", "colgroup", "frame", "head", "tbody", "td", "tfoot", "th", "thead", "tr"
-          parse_error("unexpected-start-tag")
+          code = if stack_of_open_elements.include_html?("select")
+            "unexpected-start-tag-in-select"
+          else
+            "unexpected-start-tag"
+          end
+          parse_error(code)
         else
           reconstruct_active_formatting_elements
           insert_html_element(token)
