@@ -20,7 +20,49 @@ module WPTSelectors
   end
 
   def document
-    @document ||= ::HTMLParser.parse(File.read(CONTENT_HTML))
+    @document ||= begin
+      doc = ::HTMLParser.parse(File.read(CONTENT_HTML))
+      setup_special_elements!(doc)
+      doc.css_target_id = "target"
+      doc
+    end
+  end
+
+  # Mirrors WPT ParentNode-querySelector-All.js setupSpecialElements.
+  def setup_special_elements!(doc)
+    root = doc.get_element_by_id("root")
+    return unless root
+
+    any_ns = ::HTMLParser::Element.new("div")
+    any_ns.id = "any-namespace"
+    [
+      [::HTMLParser::HTML_NAMESPACE, "any-namespace-div1"],
+      [::HTMLParser::HTML_NAMESPACE, "any-namespace-div2"],
+      ["", "any-namespace-div3"],
+      ["http://www.example.org/ns", "any-namespace-div4"]
+    ].each do |ns, id|
+      el = ::HTMLParser::Element.new("div", namespace: ns)
+      el.id = id
+      any_ns.append_child(el)
+    end
+    root.append_child(any_ns)
+
+    no_ns = ::HTMLParser::Element.new("div")
+    no_ns.id = "no-namespace"
+    [
+      [::HTMLParser::HTML_NAMESPACE, "no-namespace-div1"],
+      [::HTMLParser::HTML_NAMESPACE, "no-namespace-div2"],
+      ["", "no-namespace-div3"],
+      ["http://www.example.org/ns", "no-namespace-div4"]
+    ].each do |ns, id|
+      el = ::HTMLParser::Element.new("div", namespace: ns)
+      el.id = id
+      no_ns.append_child(el)
+    end
+    root.append_child(no_ns)
+
+    i1 = doc.get_element_by_id("attr-presence-i1")
+    i1["title"] = "" if i1
   end
 
   def load_known_failures

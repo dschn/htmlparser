@@ -197,6 +197,8 @@ module HTMLParser
     include ParentNode
 
     attr_accessor :quirks_mode, :parse_errors, :character_encoding, :encoding_confidence
+    # Fragment id for `:target` matching (Selectors / URL hash). Defaults to "target".
+    attr_accessor :css_target_id
 
     def initialize
       super
@@ -205,6 +207,7 @@ module HTMLParser
       @parse_errors = []
       @character_encoding = nil
       @encoding_confidence = nil
+      @css_target_id = "target"
     end
 
     # §13.3 — serialize the document's children (doctype + html element, …).

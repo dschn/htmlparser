@@ -7,18 +7,13 @@ module HTMLParser
   # Selectors Level 4 — readable subset for DOM `querySelector`.
   # https://www.w3.org/TR/selectors-4/
   # https://dom.spec.whatwg.org/#dom-parentnode-queryselector
-  #
-  # Supported: type, universal, #id, .class, attribute operators
-  # (`=` `~=` `|=` `^=` `$=` `*=`, optional `i`/`s` flag), `:not` / `:is` /
-  # `:where` / `:has` (relative selectors), `:nth-child` / `:nth-last-child` /
-  # `:nth-of-type` / `:nth-last-of-type`, structural + form pseudos
-  # (`:checked` / `:disabled` / `:enabled`), combinators, and comma lists.
   module Selectors
-    Compound = Data.define(:type, :simples)
+    Compound = Data.define(:type_ns, :type_name, :simples)
+    # type_ns: nil (no type) | :default | :any | :none
+    # type_name: String or nil (universal)
     Simple = Data.define(:kind, :args)
     Complex = Data.define(:compounds, :combinators)
     Relative = Data.define(:leading, :complex)
-    # leading: :descendant | :child | :next_sibling | :subsequent_sibling
 
     module_function
 
@@ -58,11 +53,26 @@ module HTMLParser
     end
 
     def match_compound?(element, compound)
-      if compound.type
-        return false unless element.name.casecmp?(compound.type)
-      end
+      return false unless match_type?(element, compound.type_ns, compound.type_name)
 
       compound.simples.all? { |simple| match_simple?(element, simple) }
+    end
+
+    def match_type?(element, type_ns, type_name)
+      return true if type_ns.nil?
+
+      if type_name && !element.name.casecmp?(type_name)
+        return false
+      end
+
+      case type_ns
+      when :any, :default
+        true
+      when :none
+        element.namespace.nil? || element.namespace == ""
+      else
+        false
+      end
     end
 
     def match_simple?(element, simple)
@@ -110,6 +120,14 @@ module HTMLParser
         element.has_attribute?("disabled")
       when :enabled
         form_associated?(element) && !element.has_attribute?("disabled")
+      when :lang
+        lang_matches?(element, args[:lang])
+      when :link, :visited
+        link_like?(element)
+      when :target
+        target?(element)
+      when :never
+        false
       else
         false
       end
@@ -123,24 +141,21 @@ module HTMLParser
 
     def relative_candidates(element, leading)
       case leading
-      when :descendant
-        element.each_element_descendant.to_a
-      when :child
-        element.children.grep(Element)
+      when :descendant then element.each_element_descendant.to_a
+      when :child then element.children.grep(Element)
       when :next_sibling
         sib = next_element_sibling(element)
         sib ? [sib] : []
-      when :subsequent_sibling
-        following_element_siblings(element)
-      else
-        []
+      when :subsequent_sibling then following_element_siblings(element)
+      else []
       end
     end
 
     def match_attr?(element, name, op, value, insensitive)
-      return false unless element.has_attribute?(name)
+      key = html_attr_key(element, name)
+      return false unless key
 
-      actual = element[name].to_s
+      actual = element.attributes[key].to_s
       if insensitive
         actual = actual.downcase
         value = value&.downcase
@@ -158,6 +173,20 @@ module HTMLParser
         actual == value || actual.start_with?("#{value}-")
       else
         false
+      end
+    end
+
+    # HTML attribute names are ASCII-case-insensitive; foreign attrs keep exact keys.
+    def html_attr_key(element, name)
+      if element.html?
+        lower = name.downcase
+        return lower if element.attributes.key?(lower)
+
+        element.attributes.keys.find { |k| k.downcase == lower }
+      else
+        return name if element.attributes.key?(name)
+
+        element.attributes.keys.find { |k| k.casecmp?(name) }
       end
     end
 
@@ -220,6 +249,43 @@ module HTMLParser
       %w[button input select textarea optgroup option fieldset].include?(element.name)
     end
 
+    def link_like?(element)
+      return false unless element.is_a?(Element) && element.html?
+      return false unless %w[a area].include?(element.name)
+
+      element.has_attribute?("href")
+    end
+
+    def target?(element)
+      return false unless element.is_a?(Element)
+
+      tid = target_id_for(element)
+      !tid.nil? && !tid.empty? && element.id == tid
+    end
+
+    def target_id_for(element)
+      node = element
+      while node
+        return node.css_target_id if node.is_a?(Document) && node.respond_to?(:css_target_id)
+
+        node = node.parent
+      end
+      "target"
+    end
+
+    def lang_matches?(element, lang)
+      want = lang.downcase
+      node = element
+      while node
+        if node.is_a?(Element) && node.has_attribute?("lang")
+          have = node["lang"].to_s.downcase
+          return have == want || have.start_with?("#{want}-")
+        end
+        node = node.parent
+      end
+      false
+    end
+
     def relative(from, combinator, compound)
       case combinator
       when :descendant
@@ -280,8 +346,8 @@ module HTMLParser
     # --- parser ---
 
     class Parser
-      IDENT_AT = /\G(?:[A-Za-z_][A-Za-z0-9_-]*|-[A-Za-z_][A-Za-z0-9_-]*)/
       NTH_AT = /\G(?:even|odd|[+-]?\d*n(?:\s*[+-]\s*\d+)?|[+-]?\d+)/i
+      HEX = /[0-9a-fA-F]/
 
       def initialize(input)
         @input = input
@@ -385,15 +451,17 @@ module HTMLParser
 
       def parse_compound
         skip_ws
-        saw_universal = false
-        type = nil
+        type_ns = nil
+        type_name = nil
         simples = []
+        saw_type = false
 
-        if peek("*")
-          @i += 1
-          saw_universal = true
-        elsif !peek("#") && !peek(".") && !peek("[") && !peek(":") && (ident = try_ident)
-          type = ident
+        if !peek("#") && !peek(".") && !peek("[") && !peek(":")
+          t = try_type_selector
+          if t
+            type_ns, type_name = t
+            saw_type = true
+          end
         end
 
         loop do
@@ -412,20 +480,56 @@ module HTMLParser
           end
         end
 
-        if type.nil? && simples.empty? && !saw_universal
+        if !saw_type && simples.empty?
           raise SelectorError, "expected type, universal, id, class, attribute, or pseudo-class"
         end
 
-        Compound.new(type: type, simples: simples)
+        Compound.new(type_ns: type_ns, type_name: type_name, simples: simples)
+      end
+
+      # Returns [type_ns, type_name] or nil.
+      def try_type_selector
+        if peek("|")
+          @i += 1
+          return [:none, nil] if consume_if("*")
+
+          name = try_ident
+          raise SelectorError, "expected type name after |" unless name
+
+          return [:none, name]
+        end
+
+        if peek("*")
+          @i += 1
+          if peek("|")
+            @i += 1
+            return [:any, nil] if consume_if("*")
+
+            name = try_ident
+            raise SelectorError, "expected type name after *|" unless name
+
+            return [:any, name]
+          end
+          return [:default, nil]
+        end
+
+        name = try_ident
+        return nil unless name
+
+        if peek("|")
+          raise SelectorError, "undeclared namespace prefix #{name}"
+        end
+
+        [:default, name]
       end
 
       def parse_attribute
         expect!("[")
         skip_ws
-        name = read_ident!("attribute name")
+        name = read_attr_name!
         skip_ws
-        if peek("]")
-          @i += 1
+        if peek("]") || eos?
+          @i += 1 if peek("]")
           return Simple.new(kind: :attr, args: {name: name, op: :present, value: nil, insensitive: false})
         end
 
@@ -458,13 +562,49 @@ module HTMLParser
           end
           skip_ws
         end
-        expect!("]")
+        @i += 1 if peek("]") # optional closing ] (WPT recovery cases)
         Simple.new(kind: :attr, args: {name: name, op: op, value: value, insensitive: insensitive})
+      end
+
+      def read_attr_name!
+        if peek("*") && @input[@i + 1] == "|"
+          @i += 2
+          return read_ident!("attribute name")
+        end
+        if peek("|") && @input[@i + 1] != "="
+          @i += 1
+          return read_ident!("attribute name")
+        end
+        name = try_ident
+        raise SelectorError, "expected attribute name" unless name
+        if peek("|") && @input[@i + 1] != "="
+          raise SelectorError, "undeclared namespace prefix #{name}"
+        end
+        name
       end
 
       def parse_pseudo
         expect!(":")
+        element = false
+        if peek(":")
+          @i += 1
+          element = true
+        end
         name = read_ident!("pseudo-class").downcase
+
+        if element
+          unless %w[first-line first-letter before after slotted].include?(name)
+            raise SelectorError, "unknown pseudo-element ::#{name}"
+          end
+          parse_pseudo_element_args(name)
+          return Simple.new(kind: :never, args: {})
+        end
+
+        if %w[first-line first-letter before after].include?(name)
+          parse_pseudo_element_args(name)
+          return Simple.new(kind: :never, args: {})
+        end
+
         case name
         when "not", "is", "where"
           expect!("(")
@@ -484,36 +624,48 @@ module HTMLParser
           a, b = parse_nth_args
           skip_ws
           expect!(")")
-          kind = name.tr("-", "_").to_sym
-          Simple.new(kind: kind, args: {a: a, b: b})
-        when "first-child"
-          Simple.new(kind: :first_child, args: {})
-        when "last-child"
-          Simple.new(kind: :last_child, args: {})
-        when "first-of-type"
-          Simple.new(kind: :first_of_type, args: {})
-        when "last-of-type"
-          Simple.new(kind: :last_of_type, args: {})
-        when "only-child"
-          Simple.new(kind: :only_child, args: {})
-        when "only-of-type"
-          Simple.new(kind: :only_of_type, args: {})
-        when "empty"
-          Simple.new(kind: :empty, args: {})
-        when "root"
-          Simple.new(kind: :root, args: {})
-        when "checked"
-          Simple.new(kind: :checked, args: {})
-        when "disabled"
-          Simple.new(kind: :disabled, args: {})
-        when "enabled"
-          Simple.new(kind: :enabled, args: {})
+          Simple.new(kind: name.tr("-", "_").to_sym, args: {a: a, b: b})
+        when "lang"
+          expect!("(")
+          skip_ws
+          lang = read_ident!("language")
+          skip_ws
+          expect!(")")
+          Simple.new(kind: :lang, args: {lang: lang})
+        when "first-child" then Simple.new(kind: :first_child, args: {})
+        when "last-child" then Simple.new(kind: :last_child, args: {})
+        when "first-of-type" then Simple.new(kind: :first_of_type, args: {})
+        when "last-of-type" then Simple.new(kind: :last_of_type, args: {})
+        when "only-child" then Simple.new(kind: :only_child, args: {})
+        when "only-of-type" then Simple.new(kind: :only_of_type, args: {})
+        when "empty" then Simple.new(kind: :empty, args: {})
+        when "root" then Simple.new(kind: :root, args: {})
+        when "checked" then Simple.new(kind: :checked, args: {})
+        when "disabled" then Simple.new(kind: :disabled, args: {})
+        when "enabled" then Simple.new(kind: :enabled, args: {})
+        when "link" then Simple.new(kind: :link, args: {})
+        when "visited" then Simple.new(kind: :visited, args: {})
+        when "target" then Simple.new(kind: :target, args: {})
         else
           raise SelectorError, "unsupported pseudo-class :#{name}"
         end
       end
 
-      # Parse An+B / odd / even (Selectors § / CSS Syntax An+B).
+      def parse_pseudo_element_args(name)
+        return unless peek("(")
+
+        @i += 1
+        depth = 1
+        while !eos? && depth.positive?
+          ch = @input[@i]
+          @i += 1
+          depth += 1 if ch == "("
+          depth -= 1 if ch == ")"
+        end
+        # Unclosed args (e.g. ::slotted(foo) are tolerated — selector matches nothing.
+        nil
+      end
+
       def parse_nth_args
         m = @input.match(NTH_AT, @i)
         raise SelectorError, "expected An+B, odd, or even" unless m
@@ -543,11 +695,7 @@ module HTMLParser
         else
           "#{sign}#{digits}".to_i
         end
-        b = if bdigits
-          "#{bsign}#{bdigits}".to_i
-        else
-          0
-        end
+        b = bdigits ? "#{bsign}#{bdigits}".to_i : 0
         [a, b]
       end
 
@@ -555,14 +703,17 @@ module HTMLParser
         if peek("'") || peek('"')
           quote = @input[@i]
           @i += 1
-          start = @i
+          value = +""
           while !eos? && @input[@i] != quote
-            @i += 1
+            value << if @input[@i] == "\\"
+              read_escape!
+            else
+              ch = @input[@i]
+              @i += 1
+              ch
+            end
           end
-          raise SelectorError, "unclosed attribute value" if eos?
-
-          value = @input[start...@i]
-          @i += 1
+          @i += 1 if peek(quote) # optional close quote
           value
         else
           read_ident!("attribute value")
@@ -570,18 +721,88 @@ module HTMLParser
       end
 
       def try_ident
-        m = @input.match(IDENT_AT, @i)
-        return nil unless m
+        return nil if eos?
+        return nil unless can_start_ident?
 
-        @i += m[0].length
-        m[0]
+        buf = +""
+        if peek("-")
+          buf << "-"
+          @i += 1
+        end
+
+        if peek("\\")
+          buf << read_escape!
+        elsif !eos? && name_start_char?(@input[@i])
+          buf << @input[@i]
+          @i += 1
+        else
+          @i -= buf.length
+          return nil
+        end
+
+        until eos?
+          if @input[@i] == "\\"
+            buf << read_escape!
+          elsif ident_continue?(@input[@i])
+            buf << @input[@i]
+            @i += 1
+          else
+            break
+          end
+        end
+        buf
+      end
+
+      def can_start_ident?
+        return false if eos?
+
+        ch = @input[@i]
+        return true if name_start_char?(ch) || ch == "\\"
+        return false unless ch == "-"
+        return false if @i + 1 >= @input.length
+
+        nxt = @input[@i + 1]
+        name_start_char?(nxt) || nxt == "\\"
+      end
+
+      def name_start_char?(ch)
+        ch == "_" || ch.match?(/[A-Za-z]/) || ch.ord > 0x7F
+      end
+
+      def ident_continue?(ch)
+        ch == "_" || ch == "-" || ch.match?(/[A-Za-z0-9]/) || ch.ord > 0x7F
       end
 
       def read_ident!(what)
         ident = try_ident
-        raise SelectorError, "expected #{what}" unless ident
+        raise SelectorError, "expected #{what}" unless ident && !ident.empty?
 
         ident
+      end
+
+      def read_escape!
+        raise SelectorError, "expected escape" unless consume_if("\\")
+        raise SelectorError, "invalid escape" if eos?
+
+        if @input[@i].match?(HEX)
+          hex = +""
+          6.times do
+            break if eos? || !@input[@i].match?(HEX)
+
+            hex << @input[@i]
+            @i += 1
+          end
+          @i += 1 if !eos? && @input[@i].match?(/\s/)
+          cp = hex.to_i(16)
+          cp = 0xFFFD if cp.zero? || cp > 0x10FFFF || cp.between?(0xD800, 0xDFFF)
+          [cp].pack("U")
+        elsif @input[@i] == "\n"
+          raise SelectorError, "escaped newline"
+        else
+          ch = @input[@i]
+          @i += 1
+          ch
+        end
       end
 
       def skip_ws
