@@ -214,10 +214,11 @@ module HTMLParser
         end
       end
 
+      # §13.2.6.4.15 — close the cell.
       def close_the_cell
         generate_implied_end_tags
         unless current_node&.html? && %w[td th].include?(current_node.name)
-          parse_error("expected-closing-tag-but-got-others")
+          parse_error("unexpected-cell-end-tag")
         end
         loop do
           el = stack_of_open_elements.pop

@@ -66,7 +66,7 @@ module HTMLParser
           if %w[head body html br].include?(token.name)
             insert_html_html_and_reprocess(token)
           else
-            parse_error("unexpected-end-tag")
+            parse_error("unexpected-end-tag-before-html")
           end
         when EOFToken
           insert_html_html_and_reprocess(token)
@@ -431,6 +431,8 @@ module HTMLParser
           stack_of_open_elements.to_a.reverse_each do |node|
             if node.html? && node.name == "li"
               generate_implied_end_tags(exclude: "li")
+              # html5lib routes this through the li end-tag path (end-tag-too-early).
+              parse_error("end-tag-too-early") unless current_node&.name == "li"
               stack_of_open_elements.pop_until("li")
               break
             end
@@ -443,6 +445,7 @@ module HTMLParser
           stack_of_open_elements.to_a.reverse_each do |node|
             if node.html? && %w[dd dt].include?(node.name)
               generate_implied_end_tags(exclude: node.name)
+              parse_error("end-tag-too-early") unless current_node&.name == node.name
               stack_of_open_elements.pop_until(node.name)
               break
             end
@@ -456,7 +459,7 @@ module HTMLParser
           tokenizer.switch_to(:plaintext)
         when "button"
           if stack_of_open_elements.in_scope?("button")
-            parse_error("unexpected-start-tag")
+            parse_error("unexpected-start-tag-implies-end-tag")
             generate_implied_end_tags
             stack_of_open_elements.pop_until("button")
           end
@@ -466,7 +469,7 @@ module HTMLParser
         when "a"
           existing = find_formatting_element_after_last_marker("a")
           if existing
-            parse_error("unexpected-start-tag")
+            parse_error("unexpected-start-tag-implies-end-tag")
             adoption_agency_algorithm(token)
             @active_formatting_elements.delete(existing)
             stack_of_open_elements.remove(existing)
@@ -481,7 +484,7 @@ module HTMLParser
         when "nobr"
           reconstruct_active_formatting_elements
           if stack_of_open_elements.in_scope?("nobr")
-            parse_error("unexpected-start-tag")
+            parse_error("unexpected-start-tag-implies-end-tag")
             adoption_agency_algorithm(token)
             reconstruct_active_formatting_elements
           end
@@ -586,13 +589,17 @@ module HTMLParser
           reconstruct_active_formatting_elements
           insert_html_element(token)
         when "rb", "rtc"
+          # §13.2.6.4.7 — ruby in scope: implied end tags; parse error if current ≠ ruby.
           if stack_of_open_elements.in_scope?("ruby")
             generate_implied_end_tags
+            parse_error("XXX-undefined-error") unless current_node&.html? && current_node.name == "ruby"
           end
           insert_html_element(token)
         when "rp", "rt"
+          # §13.2.6.4.7 — same, except rtc is not implied-closed.
           if stack_of_open_elements.in_scope?("ruby")
             generate_implied_end_tags(exclude: "rtc")
+            parse_error("XXX-undefined-error") unless current_node&.html? && current_node.name == "ruby"
           end
           insert_html_element(token)
         when "math"
@@ -630,14 +637,12 @@ module HTMLParser
           "dialog", "dir", "div", "dl", "fieldset", "figcaption", "figure", "footer",
           "header", "hgroup", "listing", "main", "menu", "nav", "ol", "pre", "search",
           "section", "summary", "ul"
-          unless stack_of_open_elements.in_scope?(token.name)
-            parse_error("unexpected-end-tag")
-            return
-          end
-          generate_implied_end_tags
-          # html5lib: end-tag-too-early when current node is not the end-tag target.
+          # html5lib endTagBlock: end-tag-too-early even when the element is not in
+          # scope (e.g. </div> with a marquee current — marquee is a scope barrier).
+          in_scope = stack_of_open_elements.in_scope?(token.name)
+          generate_implied_end_tags if in_scope
           parse_error("end-tag-too-early") unless current_node&.name == token.name
-          stack_of_open_elements.pop_until(token.name)
+          stack_of_open_elements.pop_until(token.name) if in_scope
         when "form"
           # §13.2.6.4.7 — end tag form (remove form from stack; leave descendants open).
           if stack_of_open_elements.in_scope?("template")
@@ -700,14 +705,13 @@ module HTMLParser
           "strong", "tt", "u"
           adoption_agency_algorithm(token)
         when "applet", "marquee", "object"
-          unless stack_of_open_elements.in_scope?(token.name)
-            parse_error("unexpected-end-tag")
-            return
-          end
-          generate_implied_end_tags
+          in_scope = stack_of_open_elements.in_scope?(token.name)
+          generate_implied_end_tags if in_scope
           parse_error("end-tag-too-early") unless current_node&.name == token.name
-          stack_of_open_elements.pop_until(token.name)
-          clear_active_formatting_elements_to_last_marker
+          if in_scope
+            stack_of_open_elements.pop_until(token.name)
+            clear_active_formatting_elements_to_last_marker
+          end
         when "br"
           parse_error("unexpected-end-tag")
           process_in_body_start_tag(StartTagToken.new("br"))

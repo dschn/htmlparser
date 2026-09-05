@@ -392,7 +392,7 @@ module HTMLParser
               return
             end
             generate_implied_end_tags
-            parse_error("expected-closing-tag-but-got-others") unless current_node&.name == token.name
+            parse_error("unexpected-cell-end-tag") unless current_node&.name == token.name
             stack_of_open_elements.pop_until(token.name)
             clear_active_formatting_elements_to_last_marker
             @insertion_mode = :in_row
