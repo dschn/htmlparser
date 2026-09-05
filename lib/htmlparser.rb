@@ -2,6 +2,8 @@
 
 require_relative "htmlparser/version"
 require_relative "htmlparser/input"
+require_relative "htmlparser/encoding"
+require_relative "htmlparser/encoding/prescan"
 require_relative "htmlparser/tokens"
 require_relative "htmlparser/parse_error"
 require_relative "htmlparser/tokenizer"
@@ -9,6 +11,11 @@ require_relative "htmlparser/tree_construction"
 
 module HTMLParser
   TokenizeResult = Struct.new(:tokens, :parse_errors)
+
+  # §13.2.3 — sniff encoding from a byte string (BOM, then meta prescan, then default).
+  def self.sniff_encoding(bytes, default: "windows-1252")
+    Encoding.sniff(bytes, default: default)
+  end
 
   # Tokenize an HTML string. Used by specs and html5lib harnesses.
   # content_model maps to the initial tokenizer state (data, rcdata, …).

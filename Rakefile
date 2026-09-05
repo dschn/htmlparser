@@ -62,6 +62,28 @@ namespace :conformance do
       puts "Wrote #{error_failures.size} #errors failures to #{HTML5libTreeConstruction::KNOWN_ERROR_FAILURES_PATH}"
     end
   end
+
+  desc "Run html5lib encoding sniffing conformance specs"
+  RSpec::Core::RakeTask.new(:encoding) do |t|
+    t.pattern = "spec/conformance/encoding_spec.rb"
+  end
+
+  namespace :encoding do
+    desc "Rewrite known_failures_encoding.txt from current mismatches"
+    task :baseline do
+      require_relative "lib/htmlparser"
+      require_relative "spec/support/html5lib_encoding"
+
+      failures = []
+      HTML5libEncoding.each_case do |test_case|
+        result = test_case.run
+        failures << test_case.key unless test_case.matches?(result)
+      end
+
+      HTML5libEncoding.write_known_failures(failures)
+      puts "Wrote #{failures.size} known failures to #{HTML5libEncoding::KNOWN_FAILURES_PATH}"
+    end
+  end
 end
 
 namespace :tokenizer do

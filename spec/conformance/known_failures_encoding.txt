@@ -1,0 +1,1 @@
+# Known encoding sniff mismatches (file, index, data preview). Empty = all green.
