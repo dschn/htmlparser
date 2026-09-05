@@ -16,6 +16,7 @@ module HTMLParser
       "unexpected-question-mark-instead-of-tag-name" => "expected-tag-name-but-got-question-mark",
       "unexpected-solidus-in-tag" => "unexpected-character-after-solidus-in-tag",
       "incorrectly-opened-comment" => "expected-dashes-or-doctype",
+      "incorrectly-closed-comment" => "unexpected-bang-after-double-dash-in-comment",
       "expected-closing-tag-but-got-others" => "unexpected-end-tag"
     }.freeze
 

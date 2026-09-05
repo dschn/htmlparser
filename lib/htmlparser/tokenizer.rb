@@ -111,6 +111,9 @@ module HTMLParser
       @adjusted_current_node_provider = nil
       @markup_line = 1
       @markup_column = 0
+      @character_buffer = +""
+      @character_buffer_line = nil
+      @character_buffer_column = nil
     end
 
     def self.content_model_for_html5lib_state(name)
@@ -129,6 +132,27 @@ module HTMLParser
     # Tree construction (and tests) may switch tokenizer state between tokens.
     def switch_to(state)
       @state = state
+    end
+
+    # html5lib data-state buffering: one CharacterToken per maximal run.
+    def append_to_character_buffer(character)
+      if @character_buffer.empty?
+        @character_buffer_line = @input_stream.last_line
+        @character_buffer_column = @input_stream.last_column
+      end
+      @character_buffer << character
+    end
+
+    def flush_character_buffer!
+      return if @character_buffer.empty?
+
+      token = CharacterToken.new(@character_buffer)
+      token.line = @character_buffer_line
+      token.column = @character_buffer_column
+      @character_buffer = +""
+      @character_buffer_line = nil
+      @character_buffer_column = nil
+      emit(token)
     end
 
     def parse

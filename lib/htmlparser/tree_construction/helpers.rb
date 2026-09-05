@@ -173,15 +173,34 @@ module HTMLParser
       end
 
       def parse_error(code, token = @current_token)
-        # html5lib `#errors` locations: character tokens use the character's
+        # html5lib `#errors` locations: most character errors use the character's
         # column; tag/comment/doctype errors use the position after the token
         # (the input stream's next-character cursor when the tree sees it).
+        # expected-doctype-but-got-chars uses the end of the coalesced char run.
         line, column = if token.is_a?(CharacterToken) && token.line
-          [token.line, token.column]
+          if code == "expected-doctype-but-got-chars"
+            character_token_end_location(token)
+          else
+            [token.line, token.column]
+          end
         else
           [tokenizer.input_stream_line, tokenizer.input_stream_column]
         end
         tokenizer.parse_errors << ParseError.new(code, line: line, column: column)
+      end
+
+      def character_token_end_location(token)
+        line = token.line
+        column = token.column
+        token.value.each_char do |ch|
+          if ch == "\n"
+            line += 1
+            column = 0
+          else
+            column += 1
+          end
+        end
+        [line, column]
       end
 
       def whitespace_character_token?(token)

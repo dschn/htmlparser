@@ -9,21 +9,30 @@ module HTMLParser
         case consume_next_input_character
         when "&"
           # Set the return state to the data state. Switch to the character reference state.
+          flush_character_buffer!
           return_to_and_switch_to(:data, :character_reference)
         when "<"
           # Switch to the tag open state.
+          flush_character_buffer!
           note_markup_start!
           switch_to(:tag_open)
         when "\u0000"
           # This is an unexpected-null-character parse error. Emit the current input character as a character token.
+          flush_character_buffer!
           parse_error("unexpected-null-character")
           emit(CharacterToken.new(current_input_character))
         when EOF
           # Emit an end-of-file token.
+          flush_character_buffer!
           emit_eof!
-        else
-          # Emit the current input character as a character token.
+        when *WHITESPACE
+          # Keep whitespace as one-char tokens (frameset / ignore-LF / colgroup).
+          flush_character_buffer!
           emit(CharacterToken.new(current_input_character))
+        else
+          # Buffer non-whitespace runs (html5lib-style) so tree `#errors` like
+          # expected-doctype-but-got-chars land at the end of the run.
+          append_to_character_buffer(current_input_character)
         end
       end
 
