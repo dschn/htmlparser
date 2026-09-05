@@ -24,7 +24,8 @@ module HTMLParser
     FOSTER_EQUIVALENTS = {
       "unexpected-start-tag-implies-table-voodoo" => "foster-parenting-start-tag",
       "unexpected-end-tag-implies-table-voodoo" => "foster-parenting-end-tag",
-      "unexpected-character-implies-table-voodoo" => "foster-parenting-character"
+      "unexpected-character-implies-table-voodoo" => "foster-parenting-character",
+      "foster-parenting-character-in-table" => "foster-parenting-character"
     }.freeze
 
     DOUBLE_ESCAPED_SCRIPT_STATES = %i[
@@ -83,6 +84,8 @@ module HTMLParser
           "expected-named-closing-tag-but-got-eof"
         when "eof-in-script-html-comment-like-text"
           script_eof_solo_name(err)
+        when "eof-in-tag"
+          eof_in_tag_tree_name(err)
         else
           alias_code(err.code)
         end
@@ -120,6 +123,27 @@ module HTMLParser
       end
     end
     private_class_method :script_eof_solo_name
+
+    def eof_in_tag_tree_name(err)
+      case err.tokenizer_state
+      when :tag_name, :end_tag_open
+        "eof-in-tag-name"
+      when :self_closing_start_tag
+        "unexpected-EOF-after-solidus-in-tag"
+      when :attribute_value_double_quoted
+        "eof-in-attribute-value-double-quote"
+      when :attribute_value_single_quoted
+        "eof-in-attribute-value-single-quote"
+      when :attribute_value_unquoted
+        "eof-in-attribute-value-unquoted"
+      when :attribute_name
+        "eof-in-attribute-name"
+      else
+        # before/after attribute name — majority fixtures.
+        "expected-attribute-name-but-got-eof"
+      end
+    end
+    private_class_method :eof_in_tag_tree_name
 
     def format_error(err, code)
       if err.line && err.column

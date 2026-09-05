@@ -148,8 +148,6 @@ module HTMLParser
 
       def flush_pending_table_character_tokens
         pending = @pending_table_character_tokens.join
-        line = @pending_table_character_line
-        column = @pending_table_character_column
         @pending_table_character_tokens = []
         @pending_table_character_line = nil
         @pending_table_character_column = nil
@@ -158,13 +156,9 @@ module HTMLParser
         if whitespace_string?(pending)
           insert_character(pending)
         else
-          # html5lib: foster-parenting-character (table anything-else / in-table-text flush).
-          parse_error("foster-parenting-character", nil)
-          err = tokenizer.parse_errors.last
-          if err && line && column
-            err.line = line
-            err.column = column
-          end
+          # WPT: one foster-parenting-character(-in-table) per buffered character,
+          # located at the token that flushed in-table-text.
+          pending.length.times { parse_error("foster-parenting-character", nil) }
           pending.each_char do |char|
             process_as_in_body_with_foster_parenting(CharacterToken.new(char))
           end
@@ -206,7 +200,7 @@ module HTMLParser
           return false
         end
         generate_implied_end_tags
-        parse_error("expected-closing-tag-but-got-others") unless current_node&.name == "caption"
+        parse_error("expected-one-end-tag-but-got-another") unless current_node&.name == "caption"
         stack_of_open_elements.pop_until("caption")
         clear_active_formatting_elements_to_last_marker
         @insertion_mode = :in_table
@@ -300,7 +294,7 @@ module HTMLParser
           case token.name
           when "tbody", "tfoot", "thead"
             unless stack_of_open_elements.in_table_scope?(token.name)
-              parse_error("unexpected-end-tag")
+              parse_error("unexpected-end-tag-in-table-body")
               return
             end
             clear_stack_back_to_table_body_context
@@ -314,7 +308,7 @@ module HTMLParser
             @insertion_mode = :in_table
             anything_else_reprocess(token)
           when "body", "caption", "col", "colgroup", "html", "td", "th", "tr"
-            parse_error("unexpected-end-tag")
+            parse_error("unexpected-end-tag-in-table-body")
           else
             process_in_table(token)
           end
@@ -372,7 +366,7 @@ module HTMLParser
             @insertion_mode = :in_table_body
             anything_else_reprocess(token)
           when "body", "caption", "col", "colgroup", "html", "td", "th"
-            parse_error("unexpected-end-tag")
+            parse_error("unexpected-end-tag-in-table-row")
           else
             process_in_table(token)
           end

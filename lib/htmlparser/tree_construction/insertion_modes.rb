@@ -645,6 +645,8 @@ module HTMLParser
             parse_error("unexpected-end-tag")
             return
           end
+          # html5lib: expected-one-end-tag-but-got-another when a non-exempt node is open.
+          parse_error("expected-one-end-tag-but-got-another") if body_end_tag_has_unclosed_node?
           @insertion_mode = :after_body
         when "html"
           unless stack_of_open_elements.in_scope?("body")
@@ -762,6 +764,17 @@ module HTMLParser
         stack_of_open_elements.in_list_item_scope?("li")
       end
 
+      # html5lib endTagBody: error if a node below html/body is not in the EOF-ok set.
+      def body_end_tag_has_unclosed_node?
+        exempt = %w[
+          dd dt li optgroup option p rp rt rb rtc
+          tbody td tfoot th thead tr body html
+        ]
+        stack_of_open_elements.to_a.drop(2).any? do |node|
+          !(node.html? && exempt.include?(node.name))
+        end
+      end
+
       def special_category?(name)
         %w[
           address applet area article aside base basefont bgsound blockquote body br button
@@ -858,7 +871,7 @@ module HTMLParser
           if whitespace_character_token?(token)
             process_in_body(token)
           else
-            parse_error("unexpected-char")
+            parse_error("unexpected-char-after-body")
             @insertion_mode = :in_body
             anything_else_reprocess(token)
           end
@@ -871,7 +884,7 @@ module HTMLParser
           if token.name == "html"
             process_in_body(token)
           else
-            parse_error("unexpected-start-tag")
+            parse_error("unexpected-start-tag-after-body")
             @insertion_mode = :in_body
             anything_else_reprocess(token)
           end
@@ -930,7 +943,7 @@ module HTMLParser
           if whitespace_character_token?(token)
             insert_character(token.value)
           else
-            parse_error("unexpected-char")
+            parse_error("unexpected-char-in-frameset")
           end
         when CommentToken
           insert_comment(token)
@@ -949,7 +962,7 @@ module HTMLParser
           when "noframes"
             process_in_head(token)
           else
-            parse_error("unexpected-start-tag")
+            parse_error("unexpected-start-tag-in-frameset")
           end
         when EndTagToken
           if token.name == "frameset"
@@ -976,7 +989,7 @@ module HTMLParser
           if whitespace_character_token?(token)
             insert_character(token.value)
           else
-            parse_error("unexpected-char")
+            parse_error("unexpected-char-after-frameset")
           end
         when CommentToken
           insert_comment(token)

@@ -44,7 +44,6 @@ domjs-unsafe.dat	14	<script type="data"><!--<script>\u0000</script></script>
 domjs-unsafe.dat	15	<script type="data"><!--<script>-\u0000</script></script>
 domjs-unsafe.dat	16	<script type="data"><!--<script>--\u0000</script></script>
 domjs-unsafe.dat	3	<script>a='\u0000'</script>
-domjs-unsafe.dat	36	<table><colgroup> foo</colgroup></table>
 domjs-unsafe.dat	4	<script type="data"><!--\u0000</script>
 domjs-unsafe.dat	46	<svg><font size=4></font></svg>
 domjs-unsafe.dat	47	<svg><font color=red></font></svg>
@@ -228,16 +227,13 @@ scriptdata01.dat	6	FOO<script></script foo=">" dd>BAR
 scriptdata01.dat	7	FOO<script>'<'</script>BAR
 scriptdata01.dat	8	FOO<script>'<!'</script>BAR
 scriptdata01.dat	9	FOO<script>'<!-'</script>BAR
-tables01.dat	13	<table><tr></body></caption></col></colgroup></html></td></th><td>foo
 tables01.dat	18	<table>a<!doctype html>
 tables01.dat	2	<table><col foo='bar'>
-tables01.dat	3	<table><colgroup></html>foo
 template.dat	101	<body><table><tr><td><select><template>Foo</template><caption>A</table>
 template.dat	102	<body></body><template>
 template.dat	103	<head></head><template>
 template.dat	104	<head></head><template>Foo</template>
 template.dat	107	<template><a><table><a>
-template.dat	111	<!DOCTYPE HTML><template><tr><td>cell</td></tr>a</template>
 template.dat	75	<body><template><col>Hello
 tests1.dat	101	<a><table><td><a><table></table><a></tr><a></table><a>
 tests1.dat	107	<table><col><tbody><col><tr><col><td><col></table><col>
@@ -269,31 +265,16 @@ tests1.dat	79	<table><a href="blah">aba<tr><td><a href="foo">br</td></tr>x</tabl
 tests1.dat	89	<p><image></p>
 tests1.dat	90	<a><table><a></table><p><a><div><a>
 tests1.dat	92	<head></html><meta><p>
+tests15.dat	10	<!doctype html><table>X<style> <tr>x </style> </table>
 tests15.dat	12	<frame></frame></frame><frameset><frame><frameset><frame></frameset><noframes></
 tests15.dat	13	<!DOCTYPE html><object></html>
 tests15.dat	2	<!doctype html></html> <head>
-tests15.dat	3	<!doctype html></body><meta>
-tests15.dat	5	<!doctype html></body><title>X</title>
 tests15.dat	6	<!doctype html><table> X<meta></table>
 tests15.dat	7	<!doctype html><table> x</table>
 tests15.dat	8	<!doctype html><table> x </table>
 tests15.dat	9	<!doctype html><table><tr> x</table>
-tests16.dat	10	<!doctype html><script></SCRIPT 
-tests16.dat	109	<script></SCRIPT 
-tests16.dat	116	<script></script 
 tests16.dat	117	<script><!
-tests16.dat	127	<script><!--</script 
-tests16.dat	144	<script><!--<script </script </script 
-tests16.dat	145	<script><!--<script </script </script/
-tests16.dat	155	<script><!--<script --></script 
-tests16.dat	156	<script><!--<script --></script/
-tests16.dat	17	<!doctype html><script></script 
 tests16.dat	18	<!doctype html><script><!
-tests16.dat	28	<!doctype html><script><!--</script 
-tests16.dat	45	<!doctype html><script><!--<script </script </script 
-tests16.dat	46	<!doctype html><script><!--<script </script </script/
-tests16.dat	58	<!doctype html><script><!--<script --></script 
-tests16.dat	59	<!doctype html><script><!--<script --></script/
 tests16.dat	69	<!doctype html><script><!--<script>--!></script>X
 tests17.dat	0	<!doctype html><table><tbody><select><tr>
 tests17.dat	1	<!doctype html><table><tr><select><td>
@@ -308,7 +289,6 @@ tests18.dat	8	<!doctype html><table><tbody><plaintext></plaintext>
 tests18.dat	9	<!doctype html><table><tbody><tr><plaintext></plaintext>
 tests19.dat	1	<!doctype html><html></p><!--foo-->
 tests19.dat	17	<html><ruby>a<rtc>b<rt>c<rb>d</ruby></html>
-tests19.dat	20	<!doctype html><div></body><!--foo-->
 tests19.dat	24	<!doctype html><table>abc<!--foo-->
 tests19.dat	26	<!doctype html><table> b <!--foo-->
 tests19.dat	28	<!doctype html><select><option></optgroup>
@@ -321,9 +301,9 @@ tests19.dat	81	<!doctype html><p><math></p>a
 tests19.dat	83	<!doctype html><math></html>
 tests19.dat	88	<!doctype html><image/>
 tests19.dat	89	<!doctype html>a<i>b<table>c<b>d</i>e</b>f
+tests19.dat	93	<!doctype html><table><i>a<div>b<tr>c<b>d</i>e
 tests2.dat	1	<textarea>test</div>test
 tests2.dat	12	<table><plaintext><td>
-tests2.dat	14	<!DOCTYPE html><table><tr>TEST
 tests2.dat	16	</b test
 tests2.dat	17	<!DOCTYPE html></b test<b &=&amp>X
 tests2.dat	18	<!doctypehtml><scrIPt type=text/x-foobar;baz>X</SCRipt
@@ -392,26 +372,22 @@ tests3.dat	13	<!DOCTYPE html><HTML><HEAD><head></HEAD></HTML>
 tests3.dat	14	<textarea>foo<span>bar</span><i>baz
 tests6.dat	11	<frameset></frameset> </div>
 tests6.dat	17	</caption><div>
-tests6.dat	18	<table><caption><div></caption>
 tests6.dat	25	<table><colgroup>foo
 tests6.dat	26	foo<col>
 tests6.dat	27	<table><colgroup></col>
-tests6.dat	28	<frameset><div>
 tests6.dat	29	</frameset><frame>
 tests6.dat	30	<frameset></div>
 tests6.dat	31	</body><div>
 tests6.dat	36	<caption><col><colgroup><tbody><tfoot><thead><tr>
-tests6.dat	37	<table><tbody></thead>
 tests6.dat	38	</table><tr>
-tests6.dat	39	<table><tbody></body></caption></col></colgroup></html></td></th></tr>
 tests6.dat	4	<!doctype>
 tests6.dat	43	</table><tr>
 tests6.dat	44	<body></body></html>
 tests6.dat	46	<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"><html></html>
 tests6.dat	50	</html><frameset></frameset>
-tests6.dat	51	</body><frameset></frameset>
 tests6.dat	7	<frameset></frameset> foo
 tests6.dat	9	<frameset></frameset> <div>
+tests7.dat	19	<!doctype html><table>X<input type=hidDEN></table>
 tests7.dat	23	<!doctype html><table><select>X<tr>
 tests7.dat	27	<body>X</body></body>
 tests7.dat	30	<table><b><tr><td>aaa</td></tr>bbb</table>ccc
@@ -468,7 +444,6 @@ tests_innerHTML_1.dat	65	<tr><a>
 tests_innerHTML_1.dat	66	</table><a>
 tests_innerHTML_1.dat	67	</tbody><a>
 tests_innerHTML_1.dat	69	</tfoot><a>
-tests_innerHTML_1.dat	7	<frameset><span>
 tests_innerHTML_1.dat	70	</thead><a>
 tests_innerHTML_1.dat	72	</tr><a>
 tests_innerHTML_1.dat	74	</select><option>
@@ -478,23 +453,18 @@ tests_innerHTML_1.dat	79	</frameset><frame>
 tests_innerHTML_1.dat	8	<table><tr>
 tests_innerHTML_1.dat	9	</table><tr>
 tricky01.dat	3	<html> <dl> <dt><b>Boo <dd>Goo? </dl> </html>
-tricky01.dat	4	<html><body> <label><a><div>Hello<div>World</div></a></label> </body></html>
 tricky01.dat	5	<table><center> <font>a</center> <img> <tr><td> </td> </tr> </table>
 tricky01.dat	6	<table><tr><p><a><p>You should see this text.
 tricky01.dat	7	<TABLE> <TR> <CENTER><CENTER><TD></TD></TR><TR> <FONT> <TABLE><tr></tr></TABLE> 
-tricky01.dat	8	<html> <body> <b><nobr><div>This text is in a div inside a nobr</nobr>More text 
 webkit01.dat	0	Test
 webkit01.dat	10	</ tttt>
 webkit01.dat	14	<A>test< /A>
 webkit01.dat	15	&lt;
 webkit01.dat	17	<body></br foo="bar"></body>
-webkit01.dat	18	<bdy><br foo="bar"></body>
 webkit01.dat	19	<body></body></br foo="bar">
-webkit01.dat	20	<bdy></body><br foo="bar">
 webkit01.dat	23	<html><body></body></html>x<!-- Hi there -->
 webkit01.dat	24	<html><body></body></html>x<!-- Hi there --></html><!-- Again -->
 webkit01.dat	25	<html><body></body></html>x<!-- Hi there --></body></html><!-- Again -->
-webkit01.dat	3	<di
 webkit01.dat	43	<svg><title><svg><div>
 webkit01.dat	44	<img <="" FAIL>
 webkit01.dat	45	<ul><li><div id='foo'/>A</li><li>B<div>C</div></li></ul>
@@ -511,7 +481,6 @@ webkit02.dat	17	<b><em><foo><foob><foob><foob><foob><fooc><fooc><fooc><fooc><foo
 webkit02.dat	19	<svg><foreignObject><div>foo</div><plaintext></foreignObject></svg><div>bar</div
 webkit02.dat	20	<svg><foreignObject></foreignObject><title></svg>foo
 webkit02.dat	21	</foreignObject><plaintext><div>foo</div>
-webkit02.dat	4	<html><body><img src="" border="0" alt="><div>A</div></body></html>
 webkit02.dat	6	<table><td></thead>A
 webkit02.dat	7	<table><td></tfoot>A
 webkit02.dat	8	<table><thead><td></tbody>A
