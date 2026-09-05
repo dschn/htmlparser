@@ -24,6 +24,18 @@ RSpec.describe HTMLParser::Selectors do
       expect(doc.query_selector_all("*").map(&:name)).to include("html", "div", "span", "p")
       expect(doc.query_selector("SPAN.a").text_content.strip).to eq("one")
     end
+
+    it "supports the common attribute operators" do
+      doc = parse(%(<a href="/docs/intro" title="HTML parser" lang="en-US" class="x y"></a>))
+      a = doc.query_selector("a")
+
+      expect(a.matches?('[href^="/docs"]')).to be(true)
+      expect(a.matches?('[href$="intro"]')).to be(true)
+      expect(a.matches?('[title*="parse"]')).to be(true)
+      expect(a.matches?('[class~="y"]')).to be(true)
+      expect(a.matches?('[lang|="en"]')).to be(true)
+      expect(a.matches?('[href^="/other"]')).to be(false)
+    end
   end
 
   describe "combinators" do
@@ -43,6 +55,36 @@ RSpec.describe HTMLParser::Selectors do
       expect(doc.query_selector("p + span").text_content).to eq("x")
       expect(doc.query_selector("p#a ~ p").id).to eq("b")
       expect(doc.query_selector("div > p#a")).to be_nil
+    end
+  end
+
+  describe "pseudo-classes" do
+    it "supports :not and :is" do
+      doc = parse(%(<div><p class="a">1</p><p class="b">2</p><span class="a">3</span></div>))
+
+      expect(doc.query_selector_all("p:not(.b)").map { |e| e.text_content }).to eq(%w[1])
+      expect(doc.query_selector_all(":is(span, p.b)").map(&:name)).to eq(%w[p span])
+    end
+
+    it "supports :nth-child, :nth-of-type, and structural pseudos" do
+      doc = parse(<<~HTML)
+        <ul>
+          <li>a</li>
+          <li>b</li>
+          <li>c</li>
+        </ul>
+        <div><span>s1</span><p>p</p><span>s2</span></div>
+        <section><em></em></section>
+      HTML
+
+      expect(doc.query_selector_all("li:nth-child(odd)").map(&:text_content)).to eq(%w[a c])
+      expect(doc.query_selector("li:nth-child(2)").text_content).to eq("b")
+      expect(doc.query_selector("li:first-child").text_content).to eq("a")
+      expect(doc.query_selector("li:last-child").text_content).to eq("c")
+      expect(doc.query_selector_all("span:nth-of-type(2)").map(&:text_content)).to eq(%w[s2])
+      expect(doc.query_selector("em:only-child").name).to eq("em")
+      expect(doc.query_selector("em:empty").name).to eq("em")
+      expect(doc.query_selector(":root").name).to eq("html")
     end
   end
 
