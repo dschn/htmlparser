@@ -37,6 +37,11 @@ module HTMLParser
       node.parent = nil
       node
     end
+
+    # §13.3 — serialize this node's children (inner HTML / fragment serialization).
+    def inner_html
+      Serialize.serialize_children(self)
+    end
   end
 
   InsertionLocation = Struct.new(:parent, :before)
@@ -57,6 +62,10 @@ module HTMLParser
       @parse_errors = []
     end
 
+    def to_html
+      inner_html
+    end
+
     def html5lib_dump
       lines = []
       children.each { |child| child.append_html5lib_dump(lines, 0) }
@@ -74,6 +83,11 @@ module HTMLParser
       @parse_errors = []
       @character_encoding = nil
       @encoding_confidence = nil
+    end
+
+    # §13.3 — serialize the document's children (doctype + html element, …).
+    def to_html
+      inner_html
     end
 
     def html5lib_dump
@@ -124,6 +138,15 @@ module HTMLParser
 
     def html?
       namespace == HTML_NAMESPACE
+    end
+
+    # §13.3 — serialize this element including its start/end tags.
+    def outer_html
+      Serialize.serialize_node(self)
+    end
+
+    def to_html
+      outer_html
     end
 
     def template_contents

@@ -1,0 +1,61 @@
+# Parse → serialize → parse tree-dump mismatches (file, index, data preview).
+doctype01.dat	13	<!DOCTYPE potato SYSTEM 'taco"'>Hello
+plain-text-unsafe.dat	9	<plaintext>\u0000filler\u0000text\u0000
+template.dat	107	<template><a><table><a>
+tests1.dat	101	<a><table><td><a><table></table><a></tr><a></table><a>
+tests1.dat	30	<a><table><td><a><table></table><a></tr><a></table><b>X</b>C<a>Y
+tests1.dat	77	<a href="blah">aba<table><a href="foo">br<tr><td></td></tr>x</table>aoe
+tests1.dat	90	<a><table><a></table><p><a><div><a>
+tests16.dat	130	<script><!--<script 
+tests16.dat	131	<script><!--<script <
+tests16.dat	132	<script><!--<script <a
+tests16.dat	133	<script><!--<script </
+tests16.dat	134	<script><!--<script </s
+tests16.dat	135	<script><!--<script </script
+tests16.dat	136	<script><!--<script </scripta
+tests16.dat	147	<script><!--<script -
+tests16.dat	148	<script><!--<script -a
+tests16.dat	149	<script><!--<script --
+tests16.dat	150	<script><!--<script --a
+tests16.dat	196	<!doctype html><form><table></form><form></table></form>
+tests16.dat	31	<!doctype html><script><!--<script 
+tests16.dat	32	<!doctype html><script><!--<script <
+tests16.dat	33	<!doctype html><script><!--<script <a
+tests16.dat	34	<!doctype html><script><!--<script </
+tests16.dat	35	<!doctype html><script><!--<script </s
+tests16.dat	36	<!doctype html><script><!--<script </script
+tests16.dat	37	<!doctype html><script><!--<script </scripta
+tests16.dat	48	<!doctype html><script><!--<script -
+tests16.dat	49	<!doctype html><script><!--<script -a
+tests16.dat	50	<!doctype html><script><!--<script -<
+tests16.dat	51	<!doctype html><script><!--<script --
+tests16.dat	52	<!doctype html><script><!--<script --a
+tests16.dat	53	<!doctype html><script><!--<script --<
+tests18.dat	0	<plaintext></plaintext>
+tests18.dat	1	<!doctype html><plaintext></plaintext>
+tests18.dat	10	<!doctype html><table><td><plaintext></plaintext>
+tests18.dat	11	<!doctype html><table><caption><plaintext></plaintext>
+tests18.dat	12	<!doctype html><table><colgroup><plaintext></plaintext>
+tests18.dat	13	<!doctype html><select><plaintext></plaintext>X
+tests18.dat	14	<!doctype html><table><select><plaintext>a<caption>b
+tests18.dat	15	<!doctype html><template><plaintext>a</template>b
+tests18.dat	16	<!doctype html><body></body><plaintext></plaintext>
+tests18.dat	19	<!doctype html><body></body></html><plaintext></plaintext>
+tests18.dat	2	<!doctype html><html><plaintext></plaintext>
+tests18.dat	22	<!doctype html><svg><title><plaintext>a</plaintext>b
+tests18.dat	3	<!doctype html><head><plaintext></plaintext>
+tests18.dat	4	<!doctype html><html><noscript><plaintext></plaintext>
+tests18.dat	5	<!doctype html></head><plaintext></plaintext>
+tests18.dat	6	<!doctype html><body><plaintext></plaintext>
+tests18.dat	7	<!doctype html><table><plaintext></plaintext>
+tests18.dat	8	<!doctype html><table><tbody><plaintext></plaintext>
+tests18.dat	9	<!doctype html><table><tbody><tr><plaintext></plaintext>
+tests19.dat	101	<!doctype html><p><a><plaintext>b
+tests19.dat	5	<!doctype html><p><plaintext>
+tests2.dat	12	<table><plaintext><td>
+tests2.dat	13	<plaintext></plaintext>
+tests20.dat	34	<!doctype html><p><button><plaintext>
+tests20.dat	41	<p><table></p>
+tests26.dat	2	<!DOCTYPE html><body><b><nobr>1<table><nobr></b><i><nobr>2<nobr></i>3
+webkit02.dat	19	<svg><foreignObject><div>foo</div><plaintext></foreignObject></svg><div>bar</div
+webkit02.dat	21	</foreignObject><plaintext><div>foo</div>

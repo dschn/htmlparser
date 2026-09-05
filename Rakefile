@@ -84,6 +84,11 @@ namespace :conformance do
       puts "Wrote #{failures.size} known failures to #{HTML5libEncoding::KNOWN_FAILURES_PATH}"
     end
   end
+
+  desc "Run HTML serialize round-trip property specs"
+  RSpec::Core::RakeTask.new(:serialize) do |t|
+    t.pattern = "spec/conformance/serialize_roundtrip_spec.rb"
+  end
 end
 
 namespace :tokenizer do

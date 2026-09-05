@@ -8,6 +8,7 @@ require_relative "htmlparser/tokens"
 require_relative "htmlparser/parse_error"
 require_relative "htmlparser/tokenizer"
 require_relative "htmlparser/tree_construction"
+require_relative "htmlparser/serialize"
 
 module HTMLParser
   TokenizeResult = Struct.new(:tokens, :parse_errors)
@@ -89,6 +90,11 @@ module HTMLParser
     # fragment case (RCDATA/RAWTEXT/script end tags are treated as text).
     tokenizer = Tokenizer.new(input_stream, content_model: content_model)
     TreeConstruction.new(tokenizer: tokenizer, context_element: context_element).call(&)
+  end
+
+  # §13.3 — serialize children of a Document / Element / DocumentFragment.
+  def self.serialize(node)
+    Serialize.serialize_children(node)
   end
 
   def self.context_element_for_fragment(context)
