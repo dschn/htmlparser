@@ -9,12 +9,13 @@ module HTMLParser
   class StartTagToken
     include TokenLocation
 
-    attr_accessor :name, :attributes, :self_closing
+    attr_accessor :name, :attributes, :self_closing, :self_closing_acknowledged
 
     def initialize(name)
       @name = name
       @attributes = []
       @self_closing = false
+      @self_closing_acknowledged = false
     end
   end
 

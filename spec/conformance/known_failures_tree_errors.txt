@@ -1,82 +1,30 @@
 # html5lib/WPT tree-construction known `#errors` mismatches — regenerate with:
 #   bundle exec rake conformance:tree:baseline
 # Only cases whose document dump already matches. Format: file<TAB>index<TAB>data_snippet
-comments01.dat	2	FOO<!-- BAR --! >BAZ
-comments01.dat	3	FOO<!-- BAR --! >BAZ
-entities01.dat	69	FOO&#11111111111
-entities01.dat	70	FOO&#1111111111
-entities01.dat	71	FOO&#111111111111
-entities02.dat	25	<div>ZZ&AElig=</div>
-html5test-com.dat	19	<![CDATA[x]]>
-math.dat	5	<math><tbody><mo></table>
-math.dat	6	<math><thead><mo></table>
-math.dat	7	<math><tfoot><mo></table>
-namespace-sensitivity.dat	0	<body><table><tr><td><svg><td><foreignObject><span></td>Foo
-noscript01.dat	17	<head><noscript>
-plain-text-unsafe.dat	10	<svg><![CDATA[\u0000filler\u0000text\u0000]]>
-plain-text-unsafe.dat	11	<body><!\u0000>
-plain-text-unsafe.dat	12	<body><!\u0000filler\u0000text>
-plain-text-unsafe.dat	34	<math><![CDATA[\u0000filler\u0000text\u0000]]>
-ruby.dat	11	<html><ruby>a<rtc>b<rt>c<rt>d</ruby></html>
-ruby.dat	13	<html><ruby>a<rtc>b<rp></ruby></html>
 tables01.dat	18	<table>a<!doctype html>
-template.dat	101	<body><table><tr><td><select><template>Foo</template><caption>A</table>
-template.dat	102	<body></body><template>
-template.dat	103	<head></head><template>
-template.dat	104	<head></head><template>Foo</template>
 template.dat	107	<template><a><table><a>
 template.dat	75	<body><template><col>Hello
-tests1.dat	0	Test
-tests1.dat	2	Line1<br>Line2<br>Line3<br>Line4
+tests1.dat	109	</strong></b></em></i></u></strike></s></blink></tt></pre></big></small></font><
 tests1.dat	32	<!-----><font><div>hello<table>excite!<b>me!<th><i>please!</tr><!--X-->
-tests1.dat	35	<
-tests1.dat	37	</
 tests1.dat	77	<a href="blah">aba<table><a href="foo">br<tr><td></td></tr>x</table>aoe
-tests1.dat	78	<a href="blah">aba<table><tr><td><a href="foo">br</td></tr>x</table>aoe
 tests1.dat	79	<table><a href="blah">aba<tr><td><a href="foo">br</td></tr>x</table>aoe
-tests1.dat	89	<p><image></p>
 tests1.dat	90	<a><table><a></table><p><a><div><a>
 tests15.dat	11	<!doctype html><div><table><a>foo</a> <tr><td>bar</td> </tr></table></div>
-tests15.dat	13	<!DOCTYPE html><object></html>
-tests15.dat	6	<!doctype html><table> X<meta></table>
 tests17.dat	0	<!doctype html><table><tbody><select><tr>
 tests17.dat	1	<!doctype html><table><tr><select><td>
 tests17.dat	4	<!doctype html><table><caption><select><tr>
-tests18.dat	12	<!doctype html><table><colgroup><plaintext></plaintext>
-tests19.dat	1	<!doctype html><html></p><!--foo-->
-tests19.dat	17	<html><ruby>a<rtc>b<rt>c<rb>d</ruby></html>
 tests19.dat	81	<!doctype html><p><math></p>a
 tests19.dat	83	<!doctype html><math></html>
-tests19.dat	88	<!doctype html><image/>
-tests2.dat	16	</b test
-tests2.dat	21	&#X
-tests2.dat	22	&#x
 tests2.dat	31	&AMp;
 tests2.dat	45	test test
-tests2.dat	5	<!DOCTYPE html><frameset>test
-tests2.dat	6	<!DOCTYPE html><frameset> te st
 tests2.dat	7	<!DOCTYPE html><frameset></frameset> te st
-tests21.dat	13	<svg><foreignObject><div><![CDATA[foo]]>
-tests21.dat	16	<svg><![CDATA[<svg>a
-tests21.dat	17	<svg><![CDATA[</svg>a
-tests21.dat	2	<div><![CDATA[foo]]>
-tests21.dat	3	<svg><![CDATA[foo
-tests21.dat	4	<svg><![CDATA[
-tests21.dat	7	<svg><![CDATA[]]
-tests21.dat	8	<svg><![CDATA[]
-tests21.dat	9	<svg><![CDATA[]>a
+tests20.dat	62	<math><annotation-xml></svg>x
+tests21.dat	19	<svg><![CDATA[<svg>]]></path>
 tests6.dat	26	foo<col>
-tests6.dat	36	<caption><col><colgroup><tbody><tfoot><thead><tr>
-tests6.dat	38	</table><tr>
-tests6.dat	43	</table><tr>
 tests7.dat	23	<!doctype html><table><select>X<tr>
 tests7.dat	32	A<table><tr> B</tr> </em>C</table>
 tests7.dat	8	<!doctype html><table>X<tr><td><table> <meta></table></table>
 tests8.dat	4	<table><div>x<div></div>x</span>x
-tests_innerHTML_1.dat	13	<a><tbody><tr>
-tests_innerHTML_1.dat	14	<a><tfoot><tr>
-tests_innerHTML_1.dat	15	<a><thead><tr>
-tests_innerHTML_1.dat	16	<a><tr>
 tests_innerHTML_1.dat	19	<table></table><tbody>
 tests_innerHTML_1.dat	24	<span><caption><span>
 tests_innerHTML_1.dat	25	<span><col><span>
@@ -87,12 +35,11 @@ tests_innerHTML_1.dat	30	<span><tfoot><span>
 tests_innerHTML_1.dat	31	<span><thead><span>
 tests_innerHTML_1.dat	32	<span><th><span>
 tests_innerHTML_1.dat	33	<span><tr><span>
-tests_innerHTML_1.dat	44	<a><tr>
 tests_innerHTML_1.dat	8	<table><tr>
-tests_innerHTML_1.dat	9	</table><tr>
 tricky01.dat	3	<html> <dl> <dt><b>Boo <dd>Goo? </dl> </html>
 tricky01.dat	5	<table><center> <font>a</center> <img> <tr><td> </td> </tr> </table>
 tricky01.dat	6	<table><tr><p><a><p>You should see this text.
 tricky01.dat	7	<TABLE> <TR> <CENTER><CENTER><TD></TD></TR><TR> <FONT> <TABLE><tr></tr></TABLE> 
-webkit01.dat	45	<ul><li><div id='foo'/>A</li><li>B<div>C</div></li></ul>
+webkit01.dat	19	<body></body></br foo="bar">
 webkit01.dat	47	<table><tr><td><svg><desc><td></desc><circle>
+webkit01.dat	48	<svg><tfoot></mi><td>

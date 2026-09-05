@@ -122,6 +122,11 @@ module HTMLParser
         raise "insertion-mode reprocess loop (#{@insertion_mode})" if guard > 64
         break unless @reprocess
       end
+
+      # §13.2.6 — trailing solidus on a non-void HTML start tag (flag never acknowledged).
+      if token.is_a?(StartTagToken) && token.self_closing && !token.self_closing_acknowledged
+        parse_error("non-void-html-element-start-tag-with-trailing-solidus", token)
+      end
     end
   end
 end

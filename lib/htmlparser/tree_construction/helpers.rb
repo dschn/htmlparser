@@ -147,8 +147,11 @@ module HTMLParser
         stack_of_open_elements.pop_until("p")
       end
 
-      def acknowledge_self_closing_flag(_token)
-        # Spec: clear the self-closing flag acknowledgement. No further action yet.
+      # §13.2.6 — Acknowledge the self-closing flag on start tags that may use it
+      # (void HTML elements, foreign content). Unacknowledged HTML start tags with
+      # the flag set become non-void-html-element-start-tag-with-trailing-solidus.
+      def acknowledge_self_closing_flag(token)
+        token.self_closing_acknowledged = true if token.respond_to?(:self_closing_acknowledged=)
       end
 
       def generic_rcdata_element_parsing_algorithm(token)
