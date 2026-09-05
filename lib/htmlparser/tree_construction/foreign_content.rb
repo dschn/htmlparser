@@ -212,6 +212,7 @@ module HTMLParser
         end
       end
 
+      # §13.2.6.5 — Any character token.
       def process_foreign_character(token)
         # Spec splits NULL / whitespace / any-other; null must not clear frameset-ok.
         token.value.each_char do |char|
@@ -227,6 +228,7 @@ module HTMLParser
         end
       end
 
+      # §13.2.6.5 — Any start tag token.
       def process_foreign_start_tag(token)
         if HTML_BREAKOUT_START_TAGS.include?(token.name) ||
             (token.name == "font" && font_breakout?(token))
@@ -241,6 +243,7 @@ module HTMLParser
         token.attributes.any? { |a| %w[color face size].include?(a[:name]) }
       end
 
+      # §13.2.6.5 — Any other start tag (MathML / SVG adjust + insert).
       def foreign_start_tag(token)
         ns = adjusted_current_node.namespace
         case ns
@@ -254,6 +257,7 @@ module HTMLParser
         insert_foreign_element(token, ns)
       end
 
+      # §13.2.6.5 — HTML integration / breakout start tags (and end tags br/p).
       def unexpected_start_tag_in_foreign_content(token)
         parse_error("unexpected-start-tag")
         loop do
@@ -268,6 +272,7 @@ module HTMLParser
         process_in_current_html_insertion_mode(token)
       end
 
+      # §13.2.6.5 — Any other end tag token.
       def process_foreign_end_tag(token)
         first = true
         nodes = stack_of_open_elements.to_a
@@ -296,6 +301,7 @@ module HTMLParser
         end
       end
 
+      # §13.2.6.5 — re-enter the current HTML insertion mode after a foreign breakout.
       def process_in_current_html_insertion_mode(token)
         # Stay in HTML rules for this token (and any HTML-mode reprocesses it triggers).
         guard = 0
@@ -314,6 +320,7 @@ module HTMLParser
         end
       end
 
+      # §13.2.6.5 — adjust + insert for an in-body MathML/SVG start tag entry.
       def enter_foreign(token, namespace)
         case namespace
         when MATHML_NAMESPACE
@@ -326,6 +333,7 @@ module HTMLParser
         insert_foreign_element(token, namespace)
       end
 
+      # §13.2.6.1 — create an element for a token (foreign namespace) and insert it.
       def insert_foreign_element(token, namespace)
         attrs = {}
         token.attributes.each do |attr|

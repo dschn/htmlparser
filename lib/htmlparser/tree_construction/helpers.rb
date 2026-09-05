@@ -28,6 +28,7 @@ module HTMLParser
         end
       end
 
+      # §13.2.6.1 — foster parenting steps of the appropriate place for inserting a node.
       def foster_parent_location
         elements = stack_of_open_elements.to_a
         last_template_idx = elements.rindex { |el| el.html? && el.name == "template" }
@@ -58,6 +59,7 @@ module HTMLParser
         end
       end
 
+      # §13.2.6.1 — create an element for a token (HTML namespace).
       def create_element_for_token(token)
         attrs = {}
         token.attributes.each do |attr|
@@ -72,6 +74,7 @@ module HTMLParser
         element
       end
 
+      # §13.2.6.1 — insert an HTML element for a token.
       def insert_html_element(token)
         element = create_element_for_token(token)
         insert_node_at(appropriate_place_for_inserting_a_node, element)
@@ -83,6 +86,7 @@ module HTMLParser
         element
       end
 
+      # §13.2.6.1 — insert a character.
       def insert_character(data)
         return if data.empty?
 
@@ -108,6 +112,7 @@ module HTMLParser
         end
       end
 
+      # §13.2.6.1 — insert a comment.
       def insert_comment(token, parent = nil)
         if parent
           parent.append_child(Comment.new(token.data))
@@ -116,6 +121,7 @@ module HTMLParser
         end
       end
 
+      # §13.2.6 — generate implied end tags.
       def generate_implied_end_tags(exclude: nil)
         loop do
           node = current_node
@@ -141,6 +147,7 @@ module HTMLParser
         end
       end
 
+      # §13.2.6.4.7 — close a p element (in-body helper).
       def close_p_element
         generate_implied_end_tags(exclude: "p")
         parse_error("expected-closing-tag-but-got-others") unless current_node&.name == "p"
@@ -154,6 +161,7 @@ module HTMLParser
         token.self_closing_acknowledged = true if token.respond_to?(:self_closing_acknowledged=)
       end
 
+      # §13.2.6.1 — generic RCDATA element parsing algorithm.
       def generic_rcdata_element_parsing_algorithm(token)
         insert_html_element(token)
         tokenizer.switch_to(:rcdata)
@@ -161,6 +169,7 @@ module HTMLParser
         @insertion_mode = :text
       end
 
+      # §13.2.6.1 — generic raw text element parsing algorithm.
       def generic_raw_text_element_parsing_algorithm(token)
         insert_html_element(token)
         tokenizer.switch_to(:rawtext)
@@ -168,6 +177,7 @@ module HTMLParser
         @insertion_mode = :text
       end
 
+      # §13.2.6 — stop parsing (The end).
       def stop_parsing
         # §13.2.6 — The end: pop all the nodes off the stack of open elements
         # (fires option→selectedcontent cloning on each option pop).
@@ -237,18 +247,21 @@ module HTMLParser
         @reprocess = true
       end
 
+      # §13.2.6.4.9 — clear the stack back to a table context.
       def clear_stack_back_to_table_context
         until current_node&.html? && %w[table template html].include?(current_node.name)
           stack_of_open_elements.pop
         end
       end
 
+      # §13.2.6.4.13 — clear the stack back to a table body context.
       def clear_stack_back_to_table_body_context
         until current_node&.html? && %w[tbody tfoot thead template html].include?(current_node.name)
           stack_of_open_elements.pop
         end
       end
 
+      # §13.2.6.4.14 — clear the stack back to a table row context.
       def clear_stack_back_to_table_row_context
         until current_node&.html? && %w[tr template html].include?(current_node.name)
           stack_of_open_elements.pop
@@ -321,6 +334,7 @@ module HTMLParser
         @insertion_mode = :in_body
       end
 
+      # §13.2.6.4.9 — foster parenting: process as in body with the foster flag set.
       def process_as_in_body_with_foster_parenting(token)
         @foster_parenting = true
         process_in_body(token)

@@ -37,6 +37,7 @@ module HTMLParser
         end
       end
 
+      # §13.2.6.4.9 — start tags in "in table".
       def process_in_table_start_tag(token)
         case token.name
         when "caption"
@@ -92,6 +93,7 @@ module HTMLParser
         end
       end
 
+      # §13.2.6.4.9 — end tags in "in table".
       def process_in_table_end_tag(token)
         case token.name
         when "table"

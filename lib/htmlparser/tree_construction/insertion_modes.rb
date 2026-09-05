@@ -80,6 +80,7 @@ module HTMLParser
         end
       end
 
+      # §13.2.6.4.2 — create an html element and reprocess (before html).
       def insert_html_html_and_reprocess(token)
         element = Element.new("html")
         document.append_child(element)
@@ -120,6 +121,7 @@ module HTMLParser
         end
       end
 
+      # §13.2.6.4.3 — create a head element and reprocess (before head).
       def insert_head_and_reprocess(token)
         @head_element = insert_html_element(StartTagToken.new("head"))
         @insertion_mode = :in_head
@@ -314,6 +316,7 @@ module HTMLParser
         end
       end
 
+      # §13.2.6.4.6 — create a body element and reprocess (after head).
       def insert_body_and_reprocess(token)
         insert_html_element(StartTagToken.new("body"))
         @insertion_mode = :in_body
@@ -374,6 +377,7 @@ module HTMLParser
         ].include?(element.name)
       end
 
+      # §13.2.6.4.7 — start tags in "in body".
       def process_in_body_start_tag(token)
         case token.name
         when "html"
@@ -638,6 +642,7 @@ module HTMLParser
         end
       end
 
+      # §13.2.6.4.7 — end tags in "in body".
       def process_in_body_end_tag(token)
         case token.name
         when "template"
@@ -913,6 +918,7 @@ module HTMLParser
         end
       end
 
+      # §13.2.6.4.22 The "after after body" insertion mode
       def process_after_after_body(token)
         case token
         when CommentToken

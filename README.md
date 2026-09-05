@@ -10,6 +10,41 @@ Scripting is **disabled** on purpose (`document.write`, `scripted_*` fixtures, a
 friends are out of scope). Compliance claims mean: same tree the html5lib / WPT
 corpora expect for non-scripted HTML.
 
+## Usage
+
+```ruby
+require "htmlparser"
+
+doc = HTMLParser.parse(<<~HTML)
+  <!doctype html>
+  <html>
+    <body>
+      <h1 id="title">Hello</h1>
+      <ul class="items">
+        <li><a href="/a">One</a></li>
+        <li><a href="/b">Two</a></li>
+      </ul>
+    </body>
+  </html>
+HTML
+
+doc.query_selector("h1")&.text_content          # => "Hello"
+doc.get_element_by_id("title").name             # => "h1"
+doc.query_selector_all("ul.items a").map { |a| a[:href] }
+# => ["/a", "/b"]
+
+doc.query_selector("li")&.matches?("li:first-child")  # => true
+
+puts doc.to_html
+# <!DOCTYPE html><html><head></head><body>…
+
+frag = HTMLParser.parse_fragment("<td>x</td>", context: "tr")
+frag.query_selector("td")&.text_content         # => "x"
+```
+
+Also: `HTMLParser.parse_bytes` / `sniff_encoding` (§13.2.3), `HTMLParser.serialize`
+(§13.3), `inner_html` on elements, and `parse_errors` on the result.
+
 ## Spec scoreboard
 
 Measured against [html5lib-tests](https://github.com/html5lib/html5lib-tests) and
@@ -24,11 +59,9 @@ WPT tree-construction fixtures (RSpec only — nothing from html5lib lands in
 | Serialize round-trip (§13.3) | **pass*** — 1659 / 1719 | \*60 known non-round-trips (plaintext, script text shaped like `</script>`, foster parenting, …) — normal HTML identity gaps, not missing serialize rules |
 | Parse-error names (`#errors`) | **~97%** — 1195 / 1237 | Diagnostics only; residual mostly foster/count mismatches |
 
-Also in the box: fragment parsing, foreign content (MathML/SVG), `to_html` /
-`inner_html`, a small DOM surface, and a CSS selector engine (`query_selector` /
-`query_selector_all` / `matches?`) with attrs, combinators, `:not`/`:is`/`:where`/
-`:has`, nth-*, structural and form pseudos. WPT `selectors.js` document QSA gate:
-**232 / 232**.
+Selectors (DOM / Selectors, not HTML §13.2): WPT `selectors.js` document QSA —
+**232 / 232** (`query_selector` / `query_selector_all` / `matches?` with attrs,
+combinators, `:not`/`:is`/`:where`/`:has`, nth-*, structural and form pseudos).
 
 ## Setup
 

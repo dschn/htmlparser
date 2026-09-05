@@ -120,7 +120,7 @@ module HTMLParser
       end
     end
 
-    # Spec: appropriate end tag token — name matches last emitted start tag.
+    # §13.2.5 — appropriate end tag token: name matches the last start tag emitted.
     def appropriate_end_tag_token?(token = @current_tag_token)
       return false if @last_start_tag.nil? || token.nil?
 
