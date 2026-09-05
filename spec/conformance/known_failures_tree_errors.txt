@@ -5,31 +5,24 @@ adoption01.dat	10	<table><a>1<td>2</td>3</table>
 adoption01.dat	11	<table>A<td>B</td>C</table>
 adoption01.dat	17	<b><em><foo><foob><fooc><aside></b></em>
 adoption01.dat	5	<table><a>1<p>2</a>3</p>
-comments01.dat	10	FOO<!-->BAZ
 comments01.dat	2	FOO<!-- BAR --! >BAZ
 comments01.dat	3	FOO<!-- BAR --! >BAZ
-comments01.dat	9	FOO<!--->BAZ
 doctype01.dat	10	<!DOCTYPE potato sYstEM >Hello
 doctype01.dat	11	<!DOCTYPE potato sYstEM ggg>Hello
 doctype01.dat	12	<!DOCTYPE potato SYSTEM taco >Hello
 doctype01.dat	16	<!DOCTYPE potato SYSTEMtaco "ddd">Hello
-doctype01.dat	17	<!DOCTYPE potato grass SYSTEM taco>Hello
 doctype01.dat	18	<!DOCTYPE potato pUbLIc>Hello
 doctype01.dat	19	<!DOCTYPE potato pUbLIc >Hello
-doctype01.dat	2	<!DOCTYPEhtml>Hello
 doctype01.dat	20	<!DOCTYPE potato pUbLIcgoof>Hello
 doctype01.dat	21	<!DOCTYPE potato PUBLIC goof>Hello
 doctype01.dat	23	<!DOCTYPE potato PUBLIC 'go'of'>Hello
 doctype01.dat	25	<!DOCTYPE potato PUBLIC "W3C-//dfdf" SYSTEM ggg>Hello
 doctype01.dat	3	<!DOCTYPE>Hello
-doctype01.dat	30	<!DOCTYPE root-element [SYSTEM OR PUBLIC FPI] "uri" [ <!-- internal declarations
 doctype01.dat	33	<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN""http://www.w3.org/TR/html4/str
 doctype01.dat	34	<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"'http://www.w3.org/TR/html4/str
 doctype01.dat	35	<!DOCTYPE HTML PUBLIC"-//W3C//DTD HTML 4.01//EN"'http://www.w3.org/TR/html4/stri
 doctype01.dat	36	<!DOCTYPE HTML PUBLIC'-//W3C//DTD HTML 4.01//EN''http://www.w3.org/TR/html4/stri
 doctype01.dat	4	<!DOCTYPE >Hello
-doctype01.dat	7	<!DOCTYPE potato taco>Hello
-doctype01.dat	8	<!DOCTYPE potato taco "ddd>Hello
 doctype01.dat	9	<!DOCTYPE potato sYstEM>Hello
 domjs-unsafe.dat	10	<script type="data"><!-- foo-<S
 domjs-unsafe.dat	46	<svg><font size=4></font></svg>
@@ -47,10 +40,8 @@ entities01.dat	72	FOO&#11111111111ZOO
 entities01.dat	73	FOO&#1111111111ZOO
 entities01.dat	74	FOO&#111111111111ZOO
 entities02.dat	25	<div>ZZ&AElig=</div>
-html5test-com.dat	1	<div foo<bar=''>
 html5test-com.dat	19	<![CDATA[x]]>
 html5test-com.dat	2	<div foo=`bar`>
-html5test-com.dat	3	<div \"foo=''>
 math.dat	0	<math><tr><td><mo><tr>
 math.dat	1	<math><tr><td><mo><tr>
 math.dat	2	<math><thead><mo><tbody>
@@ -80,7 +71,6 @@ scriptdata01.dat	20	FOO<script type="text/plain">'<!-- <sCrIpt> -- >'</script>BA
 scriptdata01.dat	21	FOO<script type="text/plain">'<!-- <sCrIpt '</script>BAR
 scriptdata01.dat	22	FOO<script type="text/plain">'<!-- <sCrIpt/'</script>BAR
 scriptdata01.dat	3	FOO<script></script/>BAR
-scriptdata01.dat	6	FOO<script></script foo=">" dd>BAR
 tables01.dat	18	<table>a<!doctype html>
 tables01.dat	2	<table><col foo='bar'>
 template.dat	101	<body><table><tr><td><select><template>Foo</template><caption>A</table>
@@ -96,16 +86,12 @@ tests1.dat	110	<table><tr></strong></b></em></i></u></strike></s></blink></tt></
 tests1.dat	17	</body>
 tests1.dat	18	</html>
 tests1.dat	2	Line1<br>Line2<br>Line3<br>Line4
-tests1.dat	27	<!--><div>--<!-->
 tests1.dat	30	<a><table><td><a><table></table><a></tr><a></table><b>X</b>C<a>Y
 tests1.dat	32	<!-----><font><div>hello<table>excite!<b>me!<th><i>please!</tr><!--X-->
 tests1.dat	34	<!DOCTYPE html>A<option>B<optgroup>C<select>D</option>E
 tests1.dat	35	<
 tests1.dat	36	<#
 tests1.dat	37	</
-tests1.dat	38	</#
-tests1.dat	45	</ COMMENT >
-tests1.dat	48	</ COM--MENT >
 tests1.dat	52	<p id=a><b><p id=b></b>TEST
 tests1.dat	53	<b id=a><p><b id=b></p></b>TEST
 tests1.dat	55	<!DOCTYPE html><font><table></font></table></font>
@@ -123,7 +109,6 @@ tests15.dat	8	<!doctype html><table> x </table>
 tests15.dat	9	<!doctype html><table><tr> x</table>
 tests16.dat	117	<script><!
 tests16.dat	18	<!doctype html><script><!
-tests16.dat	69	<!doctype html><script><!--<script>--!></script>X
 tests17.dat	0	<!doctype html><table><tbody><select><tr>
 tests17.dat	1	<!doctype html><table><tr><select><td>
 tests17.dat	2	<!doctype html><table><tr><td><select><td>
@@ -149,18 +134,11 @@ tests19.dat	90	<!doctype html><table><i>a<b>b<div>c<a>d</i>e</b>f
 tests19.dat	92	<!doctype html><table><i>a<b>b<div>c</i>
 tests19.dat	93	<!doctype html><table><i>a<div>b<tr>c<b>d</i>e
 tests19.dat	94	<!doctype html><table><td><table><i>a<div>b<b>c</i>d
-tests2.dat	1	<textarea>test</div>test
 tests2.dat	12	<table><plaintext><td>
 tests2.dat	16	</b test
-tests2.dat	17	<!DOCTYPE html></b test<b &=&amp>X
-tests2.dat	18	<!doctypehtml><scrIPt type=text/x-foobar;baz>X</SCRipt
 tests2.dat	20	&#
 tests2.dat	21	&#X
 tests2.dat	22	&#x
-tests2.dat	25	<!doctypehtml><p><li>
-tests2.dat	26	<!doctypehtml><p><dt>
-tests2.dat	27	<!doctypehtml><p><dd>
-tests2.dat	28	<!doctypehtml><p><form>
 tests2.dat	31	&AMp;
 tests2.dat	33	<!DOCTYPE html>X</body>X
 tests2.dat	45	test test
@@ -203,10 +181,8 @@ tests21.dat	7	<svg><![CDATA[]]
 tests21.dat	8	<svg><![CDATA[]
 tests21.dat	9	<svg><![CDATA[]>a
 tests26.dat	2	<!DOCTYPE html><body><b><nobr>1<table><nobr></b><i><nobr>2<nobr></i>3
-tests26.dat	9	<p><code x</code></p> 
 tests3.dat	12	<!DOCTYPE html><HTML><META><HEAD></HEAD></HTML>
 tests3.dat	13	<!DOCTYPE html><HTML><HEAD><head></HEAD></HTML>
-tests3.dat	14	<textarea>foo<span>bar</span><i>baz
 tests6.dat	11	<frameset></frameset> </div>
 tests6.dat	25	<table><colgroup>foo
 tests6.dat	26	foo<col>
@@ -253,16 +229,13 @@ tricky01.dat	3	<html> <dl> <dt><b>Boo <dd>Goo? </dl> </html>
 tricky01.dat	5	<table><center> <font>a</center> <img> <tr><td> </td> </tr> </table>
 tricky01.dat	6	<table><tr><p><a><p>You should see this text.
 tricky01.dat	7	<TABLE> <TR> <CENTER><CENTER><TD></TD></TR><TR> <FONT> <TABLE><tr></tr></TABLE> 
-webkit01.dat	10	</ tttt>
 webkit01.dat	14	<A>test< /A>
 webkit01.dat	17	<body></br foo="bar"></body>
 webkit01.dat	19	<body></body></br foo="bar">
 webkit01.dat	43	<svg><title><svg><div>
-webkit01.dat	44	<img <="" FAIL>
 webkit01.dat	45	<ul><li><div id='foo'/>A</li><li>B<div>C</div></li></ul>
 webkit01.dat	46	<svg><em><desc></em>
 webkit01.dat	47	<table><tr><td><svg><desc><td></desc><circle>
-webkit01.dat	9	<foo></foo bar="baz"><potato></potato quack="duck">
 webkit02.dat	10	<table><input>
 webkit02.dat	12	<b><em><foo><foo><aside></b>
 webkit02.dat	13	<b><em><foo><foo><aside></b></em>

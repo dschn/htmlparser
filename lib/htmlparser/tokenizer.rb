@@ -357,7 +357,10 @@ module HTMLParser
       surrogate-character-reference
       noncharacter-character-reference
       incorrectly-opened-comment
+      abrupt-closing-of-empty-comment
       unknown-named-character-reference
+      unexpected-character-in-attribute-name
+      end-tag-with-attributes
     ].freeze
 
     NUMERIC_MISSING_SEMICOLON_STATES = %i[

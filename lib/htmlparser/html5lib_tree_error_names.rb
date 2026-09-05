@@ -20,7 +20,13 @@ module HTMLParser
       "unexpected-solidus-in-tag" => "unexpected-character-after-solidus-in-tag",
       "incorrectly-opened-comment" => "expected-dashes-or-doctype",
       "incorrectly-closed-comment" => "unexpected-bang-after-double-dash-in-comment",
-      "expected-closing-tag-but-got-others" => "unexpected-end-tag"
+      "abrupt-closing-of-empty-comment" => "incorrect-comment",
+      "expected-closing-tag-but-got-others" => "unexpected-end-tag",
+      "missing-whitespace-before-doctype-name" => "need-space-after-doctype",
+      "invalid-character-sequence-after-doctype-name" => "expected-space-or-right-bracket-in-doctype",
+      "invalid-first-character-of-tag-name" => "expected-closing-tag-but-got-char",
+      "unexpected-character-in-attribute-name" => "invalid-character-in-attribute-name",
+      "end-tag-with-attributes" => "attributes-in-end-tag"
     }.freeze
 
     NUMERIC_MISSING_SEMICOLON_STATES = %i[
@@ -89,6 +95,7 @@ module HTMLParser
 
     def canonicalize_error_code(code)
       code = code.to_s
+      code = "unexpected-EOF-in-text-mode" if code.casecmp?("unexpected-eof-in-text-mode")
       FOSTER_EQUIVALENTS.fetch(code, code)
     end
 

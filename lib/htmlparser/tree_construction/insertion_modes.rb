@@ -849,7 +849,13 @@ module HTMLParser
           @ignore_next_lf = false
           insert_character(token.value)
         when EOFToken
-          parse_error("eof-in-text")
+          # html5lib: textarea EOF → expected-closing-tag-but-got-eof; script/title/…
+          # keep eof-in-text (formatted to expected-named-closing-tag-but-got-eof).
+          if current_node&.html? && current_node.name == "textarea"
+            parse_error("expected-closing-tag-but-got-eof")
+          else
+            parse_error("eof-in-text")
+          end
           stack_of_open_elements.pop
           @insertion_mode = @original_insertion_mode
           anything_else_reprocess(token)
