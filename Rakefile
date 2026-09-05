@@ -89,6 +89,27 @@ namespace :conformance do
   RSpec::Core::RakeTask.new(:serialize) do |t|
     t.pattern = "spec/conformance/serialize_roundtrip_spec.rb"
   end
+
+  desc "Run WPT selectors.js document querySelector conformance specs"
+  RSpec::Core::RakeTask.new(:selectors) do |t|
+    t.pattern = "spec/conformance/selectors_spec.rb"
+  end
+
+  namespace :selectors do
+    desc "Rewrite known_failures_selectors.txt from current mismatches"
+    task :baseline do
+      require_relative "lib/htmlparser"
+      require_relative "spec/support/wpt_selectors"
+
+      failures = []
+      WPTSelectors.each_case do |test_case|
+        failures << test_case.key unless test_case.matches?(test_case.run)
+      end
+
+      WPTSelectors.write_known_failures(failures)
+      puts "Wrote #{failures.size} known failures to #{WPTSelectors::KNOWN_FAILURES_PATH}"
+    end
+  end
 end
 
 namespace :tokenizer do

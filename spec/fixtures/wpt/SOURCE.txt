@@ -1,0 +1,8 @@
+# WPT commit: 150af55c06aed203bd3185982bf47702a1b0dee9
+# Canonical paths:
+#   https://github.com/web-platform-tests/wpt/blob/master/dom/nodes/selectors.js
+#   https://github.com/web-platform-tests/wpt/blob/master/dom/nodes/ParentNode-querySelector-All-content.html
+#
+# `selectors.json` is a Node-eval export of selectors.js (valid/invalid tables).
+# Regenerating:
+#   node -e '…eval selectors.js… JSON.stringify…' > selectors.json
