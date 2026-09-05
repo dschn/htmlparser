@@ -25,8 +25,10 @@ WPT tree-construction fixtures (RSpec only — nothing from html5lib lands in
 | Parse-error names (`#errors`) | **paused** — ~80% | Diagnostics only; not a correctness gate |
 
 Also in the box: fragment parsing, foreign content (MathML/SVG), `to_html` /
-`inner_html`, and a small DOM surface (`get_element_by_id`, tag/class queries,
-traversal) as a stepping stone toward selectors later.
+`inner_html`, a small DOM surface (`get_element_by_id`, tag/class queries,
+traversal), and a first-cut CSS selector engine (`query_selector` /
+`query_selector_all` / `matches?` — type, id, class, attributes, and the usual
+combinators).
 
 ## Setup
 

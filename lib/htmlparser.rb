@@ -9,6 +9,7 @@ require_relative "htmlparser/parse_error"
 require_relative "htmlparser/tokenizer"
 require_relative "htmlparser/tree_construction"
 require_relative "htmlparser/serialize"
+require_relative "htmlparser/selectors"
 
 module HTMLParser
   TokenizeResult = Struct.new(:tokens, :parse_errors)

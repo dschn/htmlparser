@@ -36,6 +36,16 @@ module HTMLParser
       end
     end
 
+    # https://dom.spec.whatwg.org/#dom-parentnode-queryselector
+    def query_selector(selectors)
+      Selectors.query_selector(self, selectors)
+    end
+
+    # https://dom.spec.whatwg.org/#dom-parentnode-queryselectorall
+    def query_selector_all(selectors)
+      Selectors.query_selector_all(self, selectors)
+    end
+
     # Depth-first tree order over descendant Element nodes.
     def each_element_descendant(&block)
       return enum_for(:each_element_descendant) unless block
@@ -295,6 +305,11 @@ module HTMLParser
     # Whitespace-split class tokens (DOMTokenList subset — Array for now).
     def class_list
       class_name.split(/\s+/).reject(&:empty?)
+    end
+
+    # https://dom.spec.whatwg.org/#dom-element-matches
+    def matches?(selectors)
+      Selectors.matches?(self, selectors)
     end
 
     # §13.3 — serialize this element including its start/end tags.
