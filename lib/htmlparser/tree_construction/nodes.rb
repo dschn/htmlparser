@@ -65,13 +65,15 @@ module HTMLParser
   end
 
   class Document < Node
-    attr_accessor :quirks_mode, :parse_errors
+    attr_accessor :quirks_mode, :parse_errors, :character_encoding, :encoding_confidence
 
     def initialize
       super
       # :no_quirks | :quirks | :limited_quirks
       @quirks_mode = :no_quirks
       @parse_errors = []
+      @character_encoding = nil
+      @encoding_confidence = nil
     end
 
     def html5lib_dump

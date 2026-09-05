@@ -324,6 +324,21 @@ module HTMLParser
       ensure
         @foster_parenting = false
       end
+
+      # §13.2.3.3 Change the encoding — only while confidence is tentative.
+      def maybe_change_the_encoding(token)
+        return unless document.encoding_confidence == :tentative
+
+        new_encoding = Encoding.encoding_from_meta_attributes(token.attributes)
+        return unless new_encoding
+
+        new_encoding = "utf-8" if new_encoding.start_with?("utf-16")
+        if new_encoding == document.character_encoding
+          document.encoding_confidence = :certain
+        else
+          raise EncodingChanged, new_encoding
+        end
+      end
     end
   end
 end

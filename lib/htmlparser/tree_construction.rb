@@ -30,11 +30,13 @@ module HTMLParser
 
     attr_reader :tokenizer, :stack_of_open_elements, :document, :context_element
 
-    def initialize(tokenizer:, context_element: nil)
+    def initialize(tokenizer:, context_element: nil, character_encoding: nil, encoding_confidence: nil)
       @tokenizer = tokenizer
       @stack_of_open_elements = OpenElements.new
       @stack_of_open_elements.on_pop = method(:option_popped_from_stack)
       @document = Document.new
+      @document.character_encoding = character_encoding
+      @document.encoding_confidence = encoding_confidence
       @context_element = context_element
       @insertion_mode = :initial
       @original_insertion_mode = nil

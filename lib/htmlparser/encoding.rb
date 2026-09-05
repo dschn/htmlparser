@@ -118,5 +118,88 @@ module HTMLParser
       nil
     end
     private_class_method :sniff_bom
+
+    # Encoding Standard name → Ruby Encoding name for String#encode.
+    RUBY_NAMES = {
+      "utf-8" => "UTF-8",
+      "utf-16be" => "UTF-16BE",
+      "utf-16le" => "UTF-16LE",
+      "utf-32be" => "UTF-32BE",
+      "utf-32le" => "UTF-32LE",
+      "windows-1252" => "Windows-1252",
+      "windows-1251" => "Windows-1251",
+      "iso-8859-2" => "ISO-8859-2",
+      "euc-jp" => "EUC-JP",
+      "shift_jis" => "Windows-31J",
+      "gbk" => "GBK"
+    }.freeze
+
+    # Decode `bytes` with Encoding Standard name → UTF-8 Ruby string (BOM stripped).
+    # Invalid / undefined byte sequences become U+FFFD.
+    def decode(bytes, name)
+      data = bytes.to_str.b
+      name = get_encoding(name) || name.to_s
+      data = strip_bom(data, name)
+      ruby_name = RUBY_NAMES.fetch(name) do
+        raise ArgumentError, "unsupported encoding for decode: #{name.inspect}"
+      end
+
+      data.force_encoding(ruby_name)
+      data.encode(
+        ::Encoding::UTF_8,
+        invalid: :replace,
+        undef: :replace,
+        replace: "\uFFFD"
+      )
+    end
+
+    def strip_bom(data, name)
+      case name
+      when "utf-8"
+        data.delete_prefix("\xEF\xBB\xBF".b)
+      when "utf-16be"
+        data.delete_prefix("\xFE\xFF".b)
+      when "utf-16le"
+        data.delete_prefix("\xFF\xFE".b)
+      when "utf-32be"
+        data.delete_prefix("\x00\x00\xFE\xFF".b)
+      when "utf-32le"
+        data.delete_prefix("\xFF\xFE\x00\x00".b)
+      else
+        data
+      end
+    end
+    private_class_method :strip_bom
+
+    # §13.2.6 — extracting a character encoding from a meta element's attributes.
+    # `attrs` is an array of `{name:, value:}` (tokenizer attribute hashes).
+    def encoding_from_meta_attributes(attrs)
+      attrs = Array(attrs)
+      charset = attrs.find { |a| a[:name].to_s.casecmp?("charset") }
+      if charset
+        enc = get_encoding(charset[:value])
+        return enc
+      end
+
+      http_equiv = attrs.find { |a| a[:name].to_s.casecmp?("http-equiv") }
+      content = attrs.find { |a| a[:name].to_s.casecmp?("content") }
+      return nil unless http_equiv && content
+      return nil unless http_equiv[:value].to_s.casecmp?("content-type")
+
+      tentative = Prescan::ContentAttrParser.new(
+        Prescan::Bytes.new(content[:value].to_s.b)
+      ).parse
+      get_encoding(tentative)
+    end
+  end
+
+  # Raised from tree construction when §13.2.3.3 change-the-encoding must restart.
+  class EncodingChanged < StandardError
+    attr_reader :new_encoding
+
+    def initialize(new_encoding)
+      @new_encoding = new_encoding
+      super("encoding changed to #{new_encoding}")
+    end
   end
 end

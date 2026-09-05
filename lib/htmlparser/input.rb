@@ -15,7 +15,7 @@ module HTMLParser
   #   html5lib doubleEscaped fixtures via Array#pack("U")) remain as single code points.
   #   Surrogate / noncharacter / control-character-in-input-stream errors are reported
   #   when characters are first consumed (see Tokenizer#report_input_stream_character_errors).
-  # - Full Encoding Standard / BOM / encoding sniffing not implemented yet.
+  # - Byte documents: `HTMLParser.parse_bytes` sniffs (§13.2.3) then `Encoding.decode`.
   module Input
     def self.normalize(string)
       bytes = string.to_str.b

@@ -151,6 +151,8 @@ module HTMLParser
             insert_html_element(token)
             stack_of_open_elements.pop
             acknowledge_self_closing_flag(token)
+            # §13.2.6.4.4 — meta may change the encoding (§13.2.3.3).
+            maybe_change_the_encoding(token)
           when "title"
             generic_rcdata_element_parsing_algorithm(token)
           when "noscript"

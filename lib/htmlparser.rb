@@ -17,6 +17,35 @@ module HTMLParser
     Encoding.sniff(bytes, default: default)
   end
 
+  # Parse a byte document: sniff (unless `encoding:` given), decode, tree-build.
+  # Retries when §13.2.3.3 change-the-encoding fires (tentative confidence only).
+  def self.parse_bytes(bytes, encoding: nil, confidence: nil, default: "windows-1252", &)
+    raw = bytes.to_str.b
+    chosen = encoding
+    conf = confidence
+
+    loop do
+      sniff = if chosen
+        name = Encoding.get_encoding(chosen) || chosen.to_s
+        Encoding::SniffResult.new(name: name, confidence: conf || :certain)
+      else
+        Encoding.sniff(raw, default: default)
+      end
+
+      begin
+        return parse_unicode(
+          Encoding.decode(raw, sniff.name),
+          character_encoding: sniff.name,
+          encoding_confidence: sniff.confidence,
+          &
+        )
+      rescue EncodingChanged => e
+        chosen = e.new_encoding
+        conf = :certain
+      end
+    end
+  end
+
   # Tokenize an HTML string. Used by specs and html5lib harnesses.
   # content_model maps to the initial tokenizer state (data, rcdata, …).
   # last_start_tag is the tag name of the last emitted start tag (html5lib lastStartTag).
@@ -36,10 +65,19 @@ module HTMLParser
 
   # Run tree construction over tokenized input (full document).
   def self.parse(html, &)
+    parse_unicode(html, &)
+  end
+
+  def self.parse_unicode(html, character_encoding: nil, encoding_confidence: nil, &)
     input_stream = InputStream.new(html)
     tokenizer = Tokenizer.new(input_stream)
-    TreeConstruction.new(tokenizer: tokenizer).call(&)
+    TreeConstruction.new(
+      tokenizer: tokenizer,
+      character_encoding: character_encoding,
+      encoding_confidence: encoding_confidence
+    ).call(&)
   end
+  private_class_method :parse_unicode
 
   # §13.4 HTML fragment parsing algorithm.
   # context is an html5lib context string: "div", "td", "svg path", "math mi", …
