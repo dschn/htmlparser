@@ -11,7 +11,10 @@ module HTMLParser
     ALIASES = {
       "unexpected-null-character" => "invalid-codepoint",
       "control-character-reference" => "illegal-codepoint-for-numeric-entity",
-      "missing-semicolon-after-character-reference" => "named-entity-without-semicolon",
+      "null-character-reference" => "illegal-codepoint-for-numeric-entity",
+      "character-reference-outside-unicode-range" => "illegal-codepoint-for-numeric-entity",
+      "surrogate-character-reference" => "illegal-codepoint-for-numeric-entity",
+      "noncharacter-character-reference" => "illegal-codepoint-for-numeric-entity",
       "absence-of-digits-in-numeric-character-reference" => "expected-numeric-entity",
       "unexpected-question-mark-instead-of-tag-name" => "expected-tag-name-but-got-question-mark",
       "unexpected-solidus-in-tag" => "unexpected-character-after-solidus-in-tag",
@@ -19,6 +22,12 @@ module HTMLParser
       "incorrectly-closed-comment" => "unexpected-bang-after-double-dash-in-comment",
       "expected-closing-tag-but-got-others" => "unexpected-end-tag"
     }.freeze
+
+    NUMERIC_MISSING_SEMICOLON_STATES = %i[
+      hexadecimal_character_reference
+      decimal_character_reference
+      numeric_character_reference_end
+    ].freeze
 
     # Older fixtures use *-implies-table-voodoo; modern ones use foster-parenting-*.
     # Canonicalize both sides when comparing `#errors`.
@@ -154,6 +163,8 @@ module HTMLParser
           script_eof_solo_name(err)
         when "eof-in-tag"
           eof_in_tag_tree_name(err)
+        when "missing-semicolon-after-character-reference"
+          missing_semicolon_tree_name(err)
         else
           alias_code(err.code)
         end
@@ -212,6 +223,15 @@ module HTMLParser
       end
     end
     private_class_method :eof_in_tag_tree_name
+
+    def missing_semicolon_tree_name(err)
+      if NUMERIC_MISSING_SEMICOLON_STATES.include?(err.tokenizer_state)
+        "numeric-entity-without-semicolon"
+      else
+        "named-entity-without-semicolon"
+      end
+    end
+    private_class_method :missing_semicolon_tree_name
 
     def format_error(err, code)
       if err.line && err.column

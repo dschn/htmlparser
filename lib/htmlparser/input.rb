@@ -93,13 +93,22 @@ module HTMLParser
       @last_column = @column
       ch = @chars[@pos]
       @pos += 1
-      if ch == "\n"
-        @line += 1
-        @column = 0
-      else
-        @column += 1
-      end
+      advance_line_column!(ch)
       ch
+    end
+
+    # Consume the next `n` characters, updating line/column like repeated getch.
+    # Used when a named character reference match spans multiple code points.
+    def advance(n)
+      n.times do
+        break if eos?
+
+        @last_line = @line
+        @last_column = @column
+        ch = @chars[@pos]
+        @pos += 1
+        advance_line_column!(ch)
+      end
     end
 
     def peek(n = 1)
@@ -118,5 +127,16 @@ module HTMLParser
     end
 
     attr_writer :pos
+
+    private
+
+    def advance_line_column!(ch)
+      if ch == "\n"
+        @line += 1
+        @column = 0
+      else
+        @column += 1
+      end
+    end
   end
 end

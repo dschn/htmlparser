@@ -176,9 +176,10 @@ module HTMLParser
         # html5lib `#errors` locations: most character errors use the character's
         # column; tag/comment/doctype errors use the position after the token
         # (the input stream's next-character cursor when the tree sees it).
-        # expected-doctype-but-got-chars uses the end of the coalesced char run.
+        # expected-doctype-but-got-chars and invalid-codepoint-in-* use the end of
+        # the character (html5lib reports after the NUL / coalesced run).
         line, column = if token.is_a?(CharacterToken) && token.line
-          if code == "expected-doctype-but-got-chars"
+          if code == "expected-doctype-but-got-chars" || code.start_with?("invalid-codepoint")
             character_token_end_location(token)
           else
             [token.line, token.column]

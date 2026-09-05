@@ -31,7 +31,9 @@ module HTMLParser
         match = ENTITIES_KEYS.select { |name| substring.start_with?(name) }.max_by(&:length)
 
         if match
-          @input_stream.pos += (match.size - 1)
+          # First character of the match was already consumed; advance the rest so
+          # line/column track the end of the entity (raw `pos +=` would desync).
+          @input_stream.advance(match.size - 1)
 
           # Historical: in an attribute, if the match has no trailing semicolon and
           # the next character is '=' or an ASCII alphanumeric, treat as a failed

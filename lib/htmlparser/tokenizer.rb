@@ -346,9 +346,30 @@ module HTMLParser
       @current_tag_token.attributes.last[:value] << string
     end
 
+    # Codes where html5lib `#errors` report the next-character cursor (after the
+    # triggering consume), matching `HTMLParser.stream.position()` in html5lib.
+    # Most other tokenizer errors keep the bad character's last_* position.
+    AFTER_CURSOR_PARSE_ERROR_CODES = %w[
+      unexpected-null-character
+      control-character-reference
+      null-character-reference
+      character-reference-outside-unicode-range
+      surrogate-character-reference
+      noncharacter-character-reference
+      incorrectly-opened-comment
+      unknown-named-character-reference
+    ].freeze
+
+    NUMERIC_MISSING_SEMICOLON_STATES = %i[
+      hexadecimal_character_reference
+      decimal_character_reference
+      numeric_character_reference_end
+    ].freeze
+
     def parse_error(code)
-      # EOF errors use the post-last-character cursor; others use the bad character.
-      line, column = if @current_input_character == EOF
+      # EOF and selected codes use the post-consume cursor; others use the bad character.
+      # Named missing-semicolon: after the entity match. Numeric: the terminating char.
+      line, column = if use_after_cursor_for_parse_error?(code)
         [@input_stream.line, @input_stream.column]
       else
         [@input_stream.last_line, @input_stream.last_column]
@@ -360,6 +381,15 @@ module HTMLParser
         tokenizer_state: @state
       )
     end
+
+    def use_after_cursor_for_parse_error?(code)
+      return true if @current_input_character == EOF
+      return true if AFTER_CURSOR_PARSE_ERROR_CODES.include?(code)
+
+      code == "missing-semicolon-after-character-reference" &&
+        !NUMERIC_MISSING_SEMICOLON_STATES.include?(@state)
+    end
+    private :use_after_cursor_for_parse_error?
 
     def new_start_tag_token
       locate_new_token!(StartTagToken.new(+""))
