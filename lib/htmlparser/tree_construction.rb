@@ -113,7 +113,7 @@ module HTMLParser
           if respond_to?(method, true)
             send(method, token)
           else
-            # Unimplemented modes: degrade toward in body so the suite can progress.
+            # Unknown insertion mode name — should not happen once modes are wired.
             @insertion_mode = :in_body
             @reprocess = true
           end
