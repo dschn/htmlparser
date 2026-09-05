@@ -36,6 +36,7 @@ module HTMLParser
           a.attributes == b.attributes
       end
 
+      # §13.2.4.3 — clear the list of active formatting elements up to the last marker.
       def clear_active_formatting_elements_to_last_marker
         while (entry = @active_formatting_elements.pop)
           break if entry == :marker
@@ -83,7 +84,7 @@ module HTMLParser
         nil
       end
 
-      # The adoption agency algorithm (in body).
+      # §13.2.6.4.7 — the adoption agency algorithm (in body).
       def adoption_agency_algorithm(token)
         subject = token.name
 

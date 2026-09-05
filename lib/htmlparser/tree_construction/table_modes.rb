@@ -196,6 +196,7 @@ module HTMLParser
         end
       end
 
+      # §13.2.6.4.11 — close the caption (shared by end-tag / start-tag exits).
       def close_caption
         unless stack_of_open_elements.in_table_scope?("caption")
           parse_error("unexpected-end-tag")
