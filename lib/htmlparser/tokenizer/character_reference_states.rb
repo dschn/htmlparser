@@ -27,21 +27,23 @@ module HTMLParser
       # §13.2.5.73 Named character reference state
       def parse_named_character_reference_state
         # Match from the current input character (already consumed; stream pos is after it).
-        substring = @input_stream.string_from(@input_stream.pos - 1)
-        match = ENTITIES_KEYS.select { |name| substring.start_with?(name) }.max_by(&:length)
+        match = NAMED_CHARACTER_REFERENCES.longest_match(
+          @input_stream.chars,
+          @input_stream.pos - 1
+        )
 
         if match
           # First character of the match was already consumed; advance the rest so
           # line/column track the end of the entity (raw `pos +=` would desync).
-          @input_stream.advance(match.size - 1)
+          @input_stream.advance(match.name.size - 1)
 
           # Historical: in an attribute, if the match has no trailing semicolon and
           # the next character is '=' or an ASCII alphanumeric, treat as a failed
           # match (flush "&" + matched name literally). Full fidelity TBD with html5lib.
-          if consumed_as_part_of_an_attribute? && !match.end_with?(";")
+          if consumed_as_part_of_an_attribute? && !match.name.end_with?(";")
             next_character = @input_stream.peek(1)
             if next_character && (next_character == "=" || next_character.match?(/[a-z0-9]/i))
-              @temporary_buffer = "&" + match
+              @temporary_buffer = "&" + match.name
               flush_code_points_consumed_as_character_reference
               @reconsume = false
               @state = @return_state
@@ -49,11 +51,11 @@ module HTMLParser
             end
           end
 
-          unless match.end_with?(";")
+          unless match.name.end_with?(";")
             parse_error("missing-semicolon-after-character-reference")
           end
 
-          @temporary_buffer = ENTITIES["&#{match}"]["characters"].dup
+          @temporary_buffer = match.characters.dup
           flush_code_points_consumed_as_character_reference
           @reconsume = false
           @state = @return_state

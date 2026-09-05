@@ -1,9 +1,8 @@
 # frozen_string_literal: true
 
-require "json"
-
 require_relative "tokens"
 require_relative "parse_error"
+require_relative "named_character_references"
 require_relative "tokenizer/tag_states"
 require_relative "tokenizer/content_model_states"
 require_relative "tokenizer/script_data_states"
@@ -23,8 +22,7 @@ module HTMLParser
     include CharacterReferenceStates
 
     EOF = nil
-    ENTITIES = JSON.parse(File.read(File.join(__dir__, "entities.json")))
-    ENTITIES_KEYS = ENTITIES.keys.map { |x| x.delete_prefix("&") }
+    NAMED_CHARACTER_REFERENCES = NamedCharacterReferences.load
     WHITESPACE = ["\u0009", "\u000a", "\u000c", "\u0020"].freeze
     PART_OF_AN_ATTRIBUTE = %i[
       attribute_value_double_quoted

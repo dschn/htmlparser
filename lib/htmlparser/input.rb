@@ -69,6 +69,8 @@ module HTMLParser
   # Character cursor over preprocessed input. Surrogate-safe alternative to StringScanner.
   class InputStream
     attr_reader :pos, :line, :column, :last_line, :last_column
+    # Single-character Strings; used by named character-reference trie lookup.
+    attr_reader :chars
 
     def initialize(string)
       @codepoints = Input.codepoints(string)
@@ -115,11 +117,6 @@ module HTMLParser
       return nil if eos?
 
       @chars[@pos, n]&.join
-    end
-
-    # Full remaining input including the character just before pos (for named char refs).
-    def string_from(index)
-      @chars[index..]&.join.to_s
     end
 
     def charpos
