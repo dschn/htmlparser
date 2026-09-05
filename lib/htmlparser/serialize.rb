@@ -60,8 +60,8 @@ module HTMLParser
     end
 
     def serialize_element(element)
-      tagname = element_tag_name(element)
-      s = +"<#{tagname}"
+      tagname = element.name
+      s = "<#{tagname}"
       element.attributes.each do |name, value|
         s << " #{serialize_attribute_name(name)}=\"#{escape_string(value, attribute_mode: true)}\""
       end
@@ -71,15 +71,6 @@ module HTMLParser
       s << serialize_children(element)
       s << "</#{tagname}>"
       s
-    end
-
-    def element_tag_name(element)
-      case element.namespace
-      when HTML_NAMESPACE, MATHML_NAMESPACE, SVG_NAMESPACE
-        element.name
-      else
-        element.name
-      end
     end
 
     # Our tree stores foreign attrs in html5lib dump form ("xlink href"); reverse to

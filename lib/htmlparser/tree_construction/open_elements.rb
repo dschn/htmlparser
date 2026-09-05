@@ -51,8 +51,8 @@ module HTMLParser
       @elements[i] = element
     end
 
-      # §13.2.4.2 — push a node immediately below another on the stack of open elements.
-      def insert_immediately_below(existing, new_element)
+    # §13.2.4.2 — push a node immediately below another on the stack of open elements.
+    def insert_immediately_below(existing, new_element)
       idx = @elements.index(existing)
       return push(new_element) unless idx
 

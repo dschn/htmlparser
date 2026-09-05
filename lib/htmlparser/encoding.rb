@@ -4,7 +4,7 @@ module HTMLParser
   # §13.2.3 Determining the character encoding — label lookup + sniffing entry.
   # Labels follow the Encoding Standard (https://encoding.spec.whatwg.org/#names-and-labels).
   module Encoding
-    SniffResult = Struct.new(:name, :confidence, keyword_init: true)
+    SniffResult = Struct.new(:name, :confidence)
 
     # Subset of Encoding Standard labels → encoding name, enough for html5lib
     # encoding fixtures and common HTML declarations. Expand as needed.

@@ -5,12 +5,12 @@ require_relative "../support/html5lib_tree_construction"
 # §13.3 property: parse → serialize → parse yields the same html5lib tree dump.
 # Full documents only. Skips tree known-failures (wontfix dumps) and serialize residuals
 # (plaintext / script end-tag-in-text / foster round-trips — HTML's known sharp edges).
-RSpec.describe "HTML serialize round-trip" do
-  KNOWN_PATH = File.expand_path("known_failures_serialize_roundtrip.txt", __dir__)
+SERIALIZE_ROUNDTRIP_KNOWN_PATH = File.expand_path("known_failures_serialize_roundtrip.txt", __dir__)
 
+RSpec.describe "HTML serialize round-trip" do
   known_docs = HTML5libTreeConstruction.load_known_failures
-  known_roundtrip = if File.exist?(KNOWN_PATH)
-    Set.new(File.readlines(KNOWN_PATH, chomp: true).reject { |l| l.empty? || l.start_with?("#") })
+  known_roundtrip = if File.exist?(SERIALIZE_ROUNDTRIP_KNOWN_PATH)
+    Set.new(File.readlines(SERIALIZE_ROUNDTRIP_KNOWN_PATH, chomp: true).reject { |l| l.empty? || l.start_with?("#") })
   else
     Set.new
   end

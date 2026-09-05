@@ -203,7 +203,7 @@ module HTMLParser
 
         def handle_possible_tag(end_tag)
           c = @data.current_byte
-          unless c && c.match?(/[a-z]/)
+          unless c&.match?(/[a-z]/)
             if end_tag
               @data.retreat!
               handle_other
