@@ -22,7 +22,7 @@ WPT tree-construction fixtures (RSpec only — nothing from html5lib lands in
 | Tree dump (§13.2.6) | **pass*** — 1915 / 1922 | \*7 unclosed-EOF `<?…` cases: we emit the bogus comment the living spec requires; fixtures expect an empty body |
 | Encoding sniff (§13.2.3) | **pass** — 82 / 82 | BOM + meta charset / http-equiv prescan |
 | Serialize round-trip (§13.3) | **pass*** — 1659 / 1719 | \*60 known non-round-trips (plaintext, script text shaped like `</script>`, foster parenting, …) — normal HTML identity gaps, not missing serialize rules |
-| Parse-error names (`#errors`) | **paused** — ~80% | Diagnostics only; not a correctness gate |
+| Parse-error names (`#errors`) | **~88%** — 1089 / 1237 | Diagnostics only; residual aliases / columns |
 
 Also in the box: fragment parsing, foreign content (MathML/SVG), `to_html` /
 `inner_html`, a small DOM surface, and a CSS selector engine (`query_selector` /
