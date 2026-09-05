@@ -66,7 +66,22 @@ RSpec.describe HTMLParser::Selectors do
       expect(doc.query_selector_all(":is(span, p.b)").map(&:name)).to eq(%w[p span])
     end
 
-    it "supports :nth-child, :nth-of-type, and structural pseudos" do
+    it "supports :has with relative combinators" do
+      doc = parse(<<~HTML)
+        <section>
+          <div class="card"><h2>Title</h2><p>Body</p></div>
+          <div class="card"><p>Only body</p></div>
+          <div class="wrap"><span class="x"></span><em class="y"></em></div>
+        </section>
+      HTML
+
+      expect(doc.query_selector_all("div:has(h2)").map { |e| e.class_name }).to eq(["card"])
+      expect(doc.query_selector("div:has(> h2)").class_name).to eq("card")
+      expect(doc.query_selector("span:has(+ em)").class_name).to eq("x")
+      expect(doc.query_selector("div:has(> p):not(:has(h2))").text_content.strip).to eq("Only body")
+    end
+
+    it "supports :nth-child, :nth-of-type, nth-last-*, and structural pseudos" do
       doc = parse(<<~HTML)
         <ul>
           <li>a</li>
@@ -79,12 +94,33 @@ RSpec.describe HTMLParser::Selectors do
 
       expect(doc.query_selector_all("li:nth-child(odd)").map(&:text_content)).to eq(%w[a c])
       expect(doc.query_selector("li:nth-child(2)").text_content).to eq("b")
+      expect(doc.query_selector("li:nth-last-child(1)").text_content).to eq("c")
       expect(doc.query_selector("li:first-child").text_content).to eq("a")
       expect(doc.query_selector("li:last-child").text_content).to eq("c")
       expect(doc.query_selector_all("span:nth-of-type(2)").map(&:text_content)).to eq(%w[s2])
+      expect(doc.query_selector("span:nth-last-of-type(1)").text_content).to eq("s2")
       expect(doc.query_selector("em:only-child").name).to eq("em")
       expect(doc.query_selector("em:empty").name).to eq("em")
       expect(doc.query_selector(":root").name).to eq("html")
+    end
+
+    it "supports :checked, :disabled, :enabled, and attribute i flag" do
+      doc = parse(<<~HTML)
+        <form>
+          <input type="checkbox" checked>
+          <input type="text" disabled>
+          <input type="text" name="ok">
+          <option selected>A</option>
+        </form>
+        <p data-x="AbC"></p>
+      HTML
+
+      expect(doc.query_selector("input:checked")["type"]).to eq("checkbox")
+      expect(doc.query_selector("option:checked").text_content).to eq("A")
+      expect(doc.query_selector("input:disabled")["type"]).to eq("text")
+      expect(doc.query_selector_all("input:enabled").map { |e| e["type"] }).to eq(%w[checkbox text])
+      expect(doc.query_selector('p[data-x="abc" i]').name).to eq("p")
+      expect(doc.query_selector('p[data-x="abc"]')).to be_nil
     end
   end
 

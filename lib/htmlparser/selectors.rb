@@ -9,17 +9,16 @@ module HTMLParser
   # https://dom.spec.whatwg.org/#dom-parentnode-queryselector
   #
   # Supported: type, universal, #id, .class, attribute operators
-  # (`=` `~=` `|=` `^=` `$=` `*=`), `:not()` / `:is()`, `:nth-child` /
-  # `:nth-of-type` (incl. odd/even), structural pseudos (`:first-child`,
-  # `:last-child`, `:first-of-type`, `:last-of-type`, `:only-child`,
-  # `:only-of-type`, `:empty`, `:root`), combinators, and comma lists.
+  # (`=` `~=` `|=` `^=` `$=` `*=`, optional `i`/`s` flag), `:not` / `:is` /
+  # `:where` / `:has` (relative selectors), `:nth-child` / `:nth-last-child` /
+  # `:nth-of-type` / `:nth-last-of-type`, structural + form pseudos
+  # (`:checked` / `:disabled` / `:enabled`), combinators, and comma lists.
   module Selectors
     Compound = Data.define(:type, :simples)
-    # type: String or nil (nil = universal / omitted type)
-    # simples: Array of Simple — args is a Hash keyed by the kind
     Simple = Data.define(:kind, :args)
     Complex = Data.define(:compounds, :combinators)
-    # combinators: :descendant | :child | :next_sibling | :subsequent_sibling
+    Relative = Data.define(:leading, :complex)
+    # leading: :descendant | :child | :next_sibling | :subsequent_sibling
 
     module_function
 
@@ -74,15 +73,21 @@ module HTMLParser
       when :class
         element.class_list.include?(args[:name])
       when :attr
-        match_attr?(element, args[:name], args[:op], args[:value])
+        match_attr?(element, args[:name], args[:op], args[:value], args[:insensitive])
       when :not
         !match_any?(element, args[:list])
-      when :is
+      when :is, :where
         match_any?(element, args[:list])
+      when :has
+        args[:list].any? { |rel| match_relative?(element, rel) }
       when :nth_child
         nth_match?(element_index(element), args[:a], args[:b])
+      when :nth_last_child
+        nth_match?(element_last_index(element), args[:a], args[:b])
       when :nth_of_type
         nth_match?(element_type_index(element), args[:a], args[:b])
+      when :nth_last_of_type
+        nth_match?(element_type_last_index(element), args[:a], args[:b])
       when :first_child
         element_index(element) == 1
       when :last_child
@@ -99,15 +104,48 @@ module HTMLParser
         element.children.none? { |c| c.is_a?(Element) || (c.is_a?(TextNode) && !c.data.empty?) }
       when :root
         element.parent.is_a?(Document)
+      when :checked
+        checked?(element)
+      when :disabled
+        element.has_attribute?("disabled")
+      when :enabled
+        form_associated?(element) && !element.has_attribute?("disabled")
       else
         false
       end
     end
 
-    def match_attr?(element, name, op, value)
+    def match_relative?(element, relative_sel)
+      relative_candidates(element, relative_sel.leading).any? do |candidate|
+        match_complex?(candidate, relative_sel.complex)
+      end
+    end
+
+    def relative_candidates(element, leading)
+      case leading
+      when :descendant
+        element.each_element_descendant.to_a
+      when :child
+        element.children.grep(Element)
+      when :next_sibling
+        sib = next_element_sibling(element)
+        sib ? [sib] : []
+      when :subsequent_sibling
+        following_element_siblings(element)
+      else
+        []
+      end
+    end
+
+    def match_attr?(element, name, op, value, insensitive)
       return false unless element.has_attribute?(name)
 
       actual = element[name].to_s
+      if insensitive
+        actual = actual.downcase
+        value = value&.downcase
+      end
+
       case op
       when :present then true
       when :exact then actual == value
@@ -144,12 +182,42 @@ module HTMLParser
       element_siblings(element).index(element)&.+(1) || 1
     end
 
+    def element_last_index(element)
+      sibs = element_siblings(element)
+      sibs.size - (sibs.index(element) || 0)
+    end
+
     def element_type_siblings(element)
       element_siblings(element).select { |el| el.name.casecmp?(element.name) }
     end
 
     def element_type_index(element)
       element_type_siblings(element).index(element)&.+(1) || 1
+    end
+
+    def element_type_last_index(element)
+      sibs = element_type_siblings(element)
+      sibs.size - (sibs.index(element) || 0)
+    end
+
+    def checked?(element)
+      return false unless element.is_a?(Element) && element.html?
+
+      case element.name
+      when "option"
+        element.selectedness || element.has_attribute?("selected")
+      when "input"
+        type = (element["type"] || "").downcase
+        %w[checkbox radio].include?(type) && element.has_attribute?("checked")
+      else
+        false
+      end
+    end
+
+    def form_associated?(element)
+      return false unless element.is_a?(Element) && element.html?
+
+      %w[button input select textarea optgroup option fieldset].include?(element.name)
     end
 
     def relative(from, combinator, compound)
@@ -189,6 +257,26 @@ module HTMLParser
       nil
     end
 
+    def next_element_sibling(node)
+      sib = node.next_sibling
+      while sib
+        return sib if sib.is_a?(Element)
+
+        sib = sib.next_sibling
+      end
+      nil
+    end
+
+    def following_element_siblings(node)
+      out = []
+      sib = next_element_sibling(node)
+      while sib
+        out << sib
+        sib = next_element_sibling(sib)
+      end
+      out
+    end
+
     # --- parser ---
 
     class Parser
@@ -225,7 +313,41 @@ module HTMLParser
         list
       end
 
+      def parse_relative_complex_list
+        list = [parse_relative_complex]
+        loop do
+          skip_ws
+          break unless consume_if(",")
+
+          skip_ws
+          raise SelectorError, "trailing comma in selector" if eos? || peek(")")
+
+          list << parse_relative_complex
+        end
+        list
+      end
+
       private
+
+      def parse_relative_complex
+        skip_ws
+        leading = if peek(">")
+          @i += 1
+          skip_ws
+          :child
+        elsif peek("+")
+          @i += 1
+          skip_ws
+          :next_sibling
+        elsif peek("~")
+          @i += 1
+          skip_ws
+          :subsequent_sibling
+        else
+          :descendant
+        end
+        Relative.new(leading: leading, complex: parse_complex)
+      end
 
       def parse_complex
         compounds = [parse_compound]
@@ -304,7 +426,7 @@ module HTMLParser
         skip_ws
         if peek("]")
           @i += 1
-          return Simple.new(kind: :attr, args: {name: name, op: :present, value: nil})
+          return Simple.new(kind: :attr, args: {name: name, op: :present, value: nil, insensitive: false})
         end
 
         op = if consume_if("~=")
@@ -326,27 +448,43 @@ module HTMLParser
         skip_ws
         value = read_attr_value!
         skip_ws
+        insensitive = false
+        if (flag = try_ident)
+          case flag.downcase
+          when "i" then insensitive = true
+          when "s" then insensitive = false
+          else
+            raise SelectorError, "expected attribute modifier i or s"
+          end
+          skip_ws
+        end
         expect!("]")
-        Simple.new(kind: :attr, args: {name: name, op: op, value: value})
+        Simple.new(kind: :attr, args: {name: name, op: op, value: value, insensitive: insensitive})
       end
 
       def parse_pseudo
         expect!(":")
         name = read_ident!("pseudo-class").downcase
         case name
-        when "not", "is"
+        when "not", "is", "where"
           expect!("(")
           list = parse_complex_list
           skip_ws
           expect!(")")
           Simple.new(kind: name.to_sym, args: {list: list})
-        when "nth-child", "nth-of-type"
+        when "has"
+          expect!("(")
+          list = parse_relative_complex_list
+          skip_ws
+          expect!(")")
+          Simple.new(kind: :has, args: {list: list})
+        when "nth-child", "nth-last-child", "nth-of-type", "nth-last-of-type"
           expect!("(")
           skip_ws
           a, b = parse_nth_args
           skip_ws
           expect!(")")
-          kind = (name == "nth-child") ? :nth_child : :nth_of_type
+          kind = name.tr("-", "_").to_sym
           Simple.new(kind: kind, args: {a: a, b: b})
         when "first-child"
           Simple.new(kind: :first_child, args: {})
@@ -364,12 +502,18 @@ module HTMLParser
           Simple.new(kind: :empty, args: {})
         when "root"
           Simple.new(kind: :root, args: {})
+        when "checked"
+          Simple.new(kind: :checked, args: {})
+        when "disabled"
+          Simple.new(kind: :disabled, args: {})
+        when "enabled"
+          Simple.new(kind: :enabled, args: {})
         else
           raise SelectorError, "unsupported pseudo-class :#{name}"
         end
       end
 
-      # Parse An+B / odd / even (§ Selectors 4 §6.6 / CSS Syntax An+B).
+      # Parse An+B / odd / even (Selectors § / CSS Syntax An+B).
       def parse_nth_args
         m = @input.match(NTH_AT, @i)
         raise SelectorError, "expected An+B, odd, or even" unless m

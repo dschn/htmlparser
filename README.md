@@ -26,8 +26,8 @@ WPT tree-construction fixtures (RSpec only — nothing from html5lib lands in
 
 Also in the box: fragment parsing, foreign content (MathML/SVG), `to_html` /
 `inner_html`, a small DOM surface, and a CSS selector engine (`query_selector` /
-`query_selector_all` / `matches?`) covering type/id/class/attributes, combinators,
-`:not` / `:is`, `:nth-child` / `:nth-of-type`, and the usual structural pseudos.
+`query_selector_all` / `matches?`) with attrs, combinators, `:not`/`:is`/`:where`/
+`:has`, nth-*, structural and form pseudos.
 
 ## Setup
 
