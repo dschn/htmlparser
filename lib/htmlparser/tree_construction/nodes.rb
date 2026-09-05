@@ -3,6 +3,55 @@
 module HTMLParser
   HTML_NAMESPACE = "http://www.w3.org/1999/xhtml"
 
+  # DOM Living Standard — ParentNode (Document / DocumentFragment / Element).
+  # Tree-order walks over light children only (not <template> contents).
+  module ParentNode
+    # https://dom.spec.whatwg.org/#dom-nonelementparentnode-getelementbyid
+    def get_element_by_id(id)
+      id = id.to_s
+      return nil if id.empty?
+
+      each_element_descendant.find { |el| el.id == id }
+    end
+
+    # https://dom.spec.whatwg.org/#dom-document-getelementsbytagname
+    # HTML documents: ASCII case-insensitive local-name match. `"*"` → all elements.
+    def get_elements_by_tag_name(qualified_name)
+      name = qualified_name.to_s
+      if name == "*"
+        each_element_descendant.to_a
+      else
+        each_element_descendant.select { |el| el.name.casecmp?(name) }
+      end
+    end
+
+    # https://dom.spec.whatwg.org/#dom-document-getelementsbyclassname
+    def get_elements_by_class_name(class_names)
+      tokens = class_names.to_s.split(/\s+/).reject(&:empty?)
+      return [] if tokens.empty?
+
+      each_element_descendant.select do |el|
+        list = el.class_list
+        tokens.all? { |t| list.include?(t) }
+      end
+    end
+
+    # Depth-first tree order over descendant Element nodes.
+    def each_element_descendant(&block)
+      return enum_for(:each_element_descendant) unless block
+
+      stack = children.reverse
+      while (node = stack.pop)
+        if node.is_a?(Element)
+          yield node
+          stack.concat(node.children.reverse)
+        elsif node.is_a?(Node)
+          stack.concat(node.children.reverse)
+        end
+      end
+    end
+  end
+
   # Minimal DOM nodes for §13.2.6 tree construction + html5lib dump serialization.
   class Node
     attr_accessor :parent
@@ -11,6 +60,63 @@ module HTMLParser
     def initialize
       @parent = nil
       @children = []
+    end
+
+    # DOM aliases (same objects as tree-construction `parent` / `children`).
+    alias_method :parent_node, :parent
+    alias_method :child_nodes, :children
+
+    def first_child
+      children.first
+    end
+
+    def last_child
+      children.last
+    end
+
+    def next_sibling
+      return nil unless parent
+
+      siblings = parent.children
+      idx = siblings.index(self)
+      return nil unless idx
+
+      siblings[idx + 1]
+    end
+
+    def previous_sibling
+      return nil unless parent
+
+      siblings = parent.children
+      idx = siblings.index(self)
+      return nil unless idx&.positive?
+
+      siblings[idx - 1]
+    end
+
+    # https://dom.spec.whatwg.org/#dom-node-textcontent
+    def text_content
+      case self
+      when TextNode, Comment, DocumentType
+        data.to_s
+      else
+        children.map(&:text_content).join
+      end
+    end
+
+    def text_content=(value)
+      case self
+      when TextNode
+        self.data = value.to_s.dup
+      when Comment
+        @data = value.to_s.dup
+      when DocumentType
+        nil
+      else
+        children.dup.each { |child| remove_child(child) }
+        s = value.to_s
+        append_child(TextNode.new(s.dup)) unless s.empty?
+      end
     end
 
     def append_child(node)
@@ -48,6 +154,8 @@ module HTMLParser
 
   # DocumentFragment used as a template element's template contents (§4.12.3 / §13.2.6).
   class TemplateContents < Node
+    include ParentNode
+
     def append_html5lib_dump(lines, depth)
       children.each { |child| child.append_html5lib_dump(lines, depth) }
     end
@@ -55,6 +163,8 @@ module HTMLParser
 
   # Result of the HTML fragment parsing algorithm (§13.4).
   class DocumentFragment < Node
+    include ParentNode
+
     attr_accessor :parse_errors
 
     def initialize
@@ -74,6 +184,8 @@ module HTMLParser
   end
 
   class Document < Node
+    include ParentNode
+
     attr_accessor :quirks_mode, :parse_errors, :character_encoding, :encoding_confidence
 
     def initialize
@@ -107,6 +219,11 @@ module HTMLParser
       @system_id = system_id
     end
 
+    # DocumentType#data is not a DOM thing; text_content uses #name.
+    def data
+      name
+    end
+
     def append_html5lib_dump(lines, depth)
       indent = "  " * depth
       if (public_id && !public_id.empty?) || (system_id && !system_id.empty?)
@@ -120,6 +237,8 @@ module HTMLParser
   end
 
   class Element < Node
+    include ParentNode
+
     attr_reader :name, :namespace, :attributes
     attr_accessor :token # StartTagToken used to create this element (AAA / reconstruct)
     # §4.10.10 option selectedness / §4.10.17 selectedcontent disabled flag.
@@ -138,6 +257,44 @@ module HTMLParser
 
     def html?
       namespace == HTML_NAMESPACE
+    end
+
+    # DOM Element.tagName — uppercase for HTML-namespace elements.
+    def tag_name
+      html? ? name.upcase : name
+    end
+
+    def [](attr_name)
+      attributes[attr_name.to_s]
+    end
+
+    def []=(attr_name, value)
+      attributes[attr_name.to_s] = value.to_s
+    end
+
+    def has_attribute?(attr_name)
+      attributes.key?(attr_name.to_s)
+    end
+
+    def id
+      attributes["id"] || ""
+    end
+
+    def id=(value)
+      attributes["id"] = value.to_s
+    end
+
+    def class_name
+      attributes["class"] || ""
+    end
+
+    def class_name=(value)
+      attributes["class"] = value.to_s
+    end
+
+    # Whitespace-split class tokens (DOMTokenList subset — Array for now).
+    def class_list
+      class_name.split(/\s+/).reject(&:empty?)
     end
 
     # §13.3 — serialize this element including its start/end tags.
