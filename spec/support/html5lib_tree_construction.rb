@@ -98,7 +98,8 @@ module HTML5libTreeConstruction
   end
 
   def known_failure_key(file:, index:, data:)
-    snippet = data.to_s.gsub(/\s+/, " ").slice(0, 80)
+    # Strip NULs so the known-failures files stay valid UTF-8 text.
+    snippet = data.to_s.gsub("\0", "\\u0000").gsub(/\s+/, " ").slice(0, 80)
     "#{file}\t#{index}\t#{snippet}"
   end
 
@@ -106,7 +107,7 @@ module HTML5libTreeConstruction
     return Set.new unless File.exist?(path)
 
     Set.new(
-      File.readlines(path, chomp: true).reject { |line| line.empty? || line.start_with?("#") }
+      File.readlines(path, chomp: true, encoding: "UTF-8").reject { |line| line.empty? || line.start_with?("#") }
     )
   end
 
@@ -197,7 +198,7 @@ module HTML5libTreeConstruction
       # No modern `(line,col): code` expectations → do not fail the case on `#errors`.
       return true if expected.empty?
 
-      run_result[:errors] == expected
+      HTMLParser::Html5libTreeErrorNames.errors_equivalent?(run_result[:errors], expected)
     end
 
     # Full match: document dump + `#errors` / `#new-errors`.

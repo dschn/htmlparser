@@ -115,9 +115,11 @@ module HTMLParser
       end
 
       def in_table_anything_else(token)
+        # Modern html5lib/WPT fixtures use foster-parenting-*; older ones still say
+        # *-implies-table-voodoo. Emit the modern names; harness equates both.
         code = case token
-        when StartTagToken then "unexpected-start-tag-implies-table-voodoo"
-        when EndTagToken then "unexpected-end-tag-implies-table-voodoo"
+        when StartTagToken then "foster-parenting-start-tag"
+        when EndTagToken then "foster-parenting-end-tag"
         when CharacterToken then "foster-parenting-character"
         else "unexpected-token-in-table"
         end

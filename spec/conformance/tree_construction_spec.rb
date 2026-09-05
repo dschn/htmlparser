@@ -45,7 +45,10 @@ RSpec.describe "html5lib/WPT tree-construction conformance" do
         skip "known failure: #errors mismatch"
       end
 
-      expect(result[:errors]).to eq(test_case.expected_errors)
+      expect(test_case.errors_match?(result)).to eq(true), lambda {
+        "expected: #{test_case.expected_errors.inspect}\n" \
+          "  actual: #{result[:errors].inspect}"
+      }
     end
   end
 end

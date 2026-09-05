@@ -19,6 +19,14 @@ module HTMLParser
       "expected-closing-tag-but-got-others" => "unexpected-end-tag"
     }.freeze
 
+    # Older fixtures use *-implies-table-voodoo; modern ones use foster-parenting-*.
+    # Canonicalize both sides when comparing `#errors`.
+    FOSTER_EQUIVALENTS = {
+      "unexpected-start-tag-implies-table-voodoo" => "foster-parenting-start-tag",
+      "unexpected-end-tag-implies-table-voodoo" => "foster-parenting-end-tag",
+      "unexpected-character-implies-table-voodoo" => "foster-parenting-character"
+    }.freeze
+
     DOUBLE_ESCAPED_SCRIPT_STATES = %i[
       script_data_double_escaped
       script_data_double_escaped_dash
@@ -31,6 +39,26 @@ module HTMLParser
 
     def alias_code(code)
       ALIASES.fetch(code.to_s, code.to_s)
+    end
+
+    def canonicalize_error_code(code)
+      code = code.to_s
+      FOSTER_EQUIVALENTS.fetch(code, code)
+    end
+
+    # Normalize a serialized `(line,col): code` line for fixture comparison.
+    def canonicalize_error_line(line)
+      line = line.to_s
+      if (m = line.match(/\A(\(\d+,\d+\):\s*)(.+)\z/))
+        "#{m[1]}#{canonicalize_error_code(m[2])}"
+      else
+        line
+      end
+    end
+
+    def errors_equivalent?(actual_lines, expected_lines)
+      Array(actual_lines).map { |l| canonicalize_error_line(l) } ==
+        Array(expected_lines).map { |l| canonicalize_error_line(l) }
     end
 
     # Serialize a parse-error list for tree `#errors`, applying pair-aware script EOF aliases.

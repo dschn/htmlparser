@@ -635,7 +635,8 @@ module HTMLParser
             return
           end
           generate_implied_end_tags
-          parse_error("unexpected-end-tag") unless current_node&.name == token.name
+          # html5lib: end-tag-too-early when current node is not the end-tag target.
+          parse_error("end-tag-too-early") unless current_node&.name == token.name
           stack_of_open_elements.pop_until(token.name)
         when "form"
           # §13.2.6.4.7 — end tag form (remove form from stack; leave descendants open).
@@ -646,7 +647,7 @@ module HTMLParser
               return
             end
             generate_implied_end_tags
-            parse_error("unexpected-end-tag") unless current_node&.html? && current_node.name == "form"
+            parse_error("end-tag-too-early") unless current_node&.html? && current_node.name == "form"
             stack_of_open_elements.pop_until("form")
           else
             node = @form_element
@@ -656,7 +657,8 @@ module HTMLParser
               return
             end
             generate_implied_end_tags
-            parse_error("unexpected-end-tag") unless current_node.equal?(node)
+            # html5lib: end-tag-too-early-ignored when form is not the current node.
+            parse_error("end-tag-too-early-ignored") unless current_node.equal?(node)
             stack_of_open_elements.remove(node)
           end
         when "p"
@@ -671,6 +673,7 @@ module HTMLParser
             return
           end
           generate_implied_end_tags(exclude: "li")
+          parse_error("end-tag-too-early") unless current_node&.name == "li"
           stack_of_open_elements.pop_until("li")
         when "dd", "dt"
           unless stack_of_open_elements.in_scope?(token.name)
@@ -678,16 +681,20 @@ module HTMLParser
             return
           end
           generate_implied_end_tags(exclude: token.name)
+          parse_error("end-tag-too-early") unless current_node&.name == token.name
           stack_of_open_elements.pop_until(token.name)
         when "h1", "h2", "h3", "h4", "h5", "h6"
-          unless stack_of_open_elements.in_scope?(%w[h1 h2 h3 h4 h5 h6])
-            parse_error("unexpected-end-tag")
-            return
+          # html5lib emits end-tag-too-early even when no heading is in scope
+          # (e.g. <p></h3>), then pops only if a heading is in scope.
+          if stack_of_open_elements.in_scope?(%w[h1 h2 h3 h4 h5 h6])
+            generate_implied_end_tags
           end
-          generate_implied_end_tags
-          loop do
-            el = stack_of_open_elements.pop
-            break if el.nil? || (el.html? && %w[h1 h2 h3 h4 h5 h6].include?(el.name))
+          parse_error("end-tag-too-early") unless current_node&.name == token.name
+          if stack_of_open_elements.in_scope?(%w[h1 h2 h3 h4 h5 h6])
+            loop do
+              el = stack_of_open_elements.pop
+              break if el.nil? || (el.html? && %w[h1 h2 h3 h4 h5 h6].include?(el.name))
+            end
           end
         when "a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small", "strike",
           "strong", "tt", "u"
@@ -698,6 +705,7 @@ module HTMLParser
             return
           end
           generate_implied_end_tags
+          parse_error("end-tag-too-early") unless current_node&.name == token.name
           stack_of_open_elements.pop_until(token.name)
           clear_active_formatting_elements_to_last_marker
         when "br"
@@ -712,6 +720,8 @@ module HTMLParser
         stack_of_open_elements.to_a.reverse_each do |node|
           if node.html? && node.name == token.name
             generate_implied_end_tags(exclude: token.name)
+            # html5lib still reports unexpected-end-tag here (not end-tag-too-early).
+            parse_error("unexpected-end-tag") unless current_node&.name == token.name
             loop do
               el = stack_of_open_elements.pop
               break if el.nil? || el.equal?(node)
