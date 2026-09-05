@@ -915,7 +915,8 @@ module HTMLParser
           elsif token.is_a?(DocTypeToken)
             process_in_body(token)
           else
-            parse_error("unexpected-token")
+            # html5lib: expected-eof-but-got-char per leftover character (end column).
+            parse_error_per_character("unexpected-token", token)
             @insertion_mode = :in_body
             anything_else_reprocess(token)
           end
@@ -943,7 +944,7 @@ module HTMLParser
           if whitespace_character_token?(token)
             insert_character(token.value)
           else
-            parse_error("unexpected-char-in-frameset")
+            parse_error_per_character("unexpected-char-in-frameset", token)
           end
         when CommentToken
           insert_comment(token)
@@ -989,7 +990,7 @@ module HTMLParser
           if whitespace_character_token?(token)
             insert_character(token.value)
           else
-            parse_error("unexpected-char-after-frameset")
+            parse_error_per_character("unexpected-char-after-frameset", token)
           end
         when CommentToken
           insert_comment(token)
@@ -1026,7 +1027,7 @@ module HTMLParser
           if whitespace_character_token?(token)
             process_in_body(token)
           else
-            parse_error("unexpected-char")
+            parse_error_per_character("unexpected-char", token)
           end
         when StartTagToken
           case token.name

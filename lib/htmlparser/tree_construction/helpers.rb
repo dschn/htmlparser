@@ -189,6 +189,24 @@ module HTMLParser
         tokenizer.parse_errors << ParseError.new(code, line: line, column: column)
       end
 
+      # One parse error per character at the end of that character (html5lib after-body /
+      # after-frameset leftover text).
+      def parse_error_per_character(code, token)
+        return parse_error(code, token) unless token.is_a?(CharacterToken) && token.line
+
+        line = token.line
+        column = token.column
+        token.value.each_char do |ch|
+          if ch == "\n"
+            line += 1
+            column = 0
+          else
+            column += 1
+          end
+          tokenizer.parse_errors << ParseError.new(code, line: line, column: column)
+        end
+      end
+
       def character_token_end_location(token)
         line = token.line
         column = token.column

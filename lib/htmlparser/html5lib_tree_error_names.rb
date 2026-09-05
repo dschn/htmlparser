@@ -56,6 +56,14 @@ module HTMLParser
       unexpected-token
     ].freeze
 
+    # after-after-body / after-after-frameset leftover characters.
+    EOF_CHAR_EQUIVALENTS = %w[
+      unexpected-token
+      unexpected-char
+      unexpected-char-after-body
+      unexpected-char-after-frameset
+    ].freeze
+
     DOUBLE_ESCAPED_SCRIPT_STATES = %i[
       script_data_double_escaped
       script_data_double_escaped_dash
@@ -97,6 +105,11 @@ module HTMLParser
 
       if (a == "expected-eof-but-got-end-tag" && EOF_END_TAG_EQUIVALENTS.include?(e)) ||
           (e == "expected-eof-but-got-end-tag" && EOF_END_TAG_EQUIVALENTS.include?(a))
+        return true
+      end
+
+      if (a == "expected-eof-but-got-char" && EOF_CHAR_EQUIVALENTS.include?(e)) ||
+          (e == "expected-eof-but-got-char" && EOF_CHAR_EQUIVALENTS.include?(a))
         return true
       end
 

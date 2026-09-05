@@ -248,7 +248,6 @@ tests19.dat	24	<!doctype html><table>abc<!--foo-->
 tests19.dat	26	<!doctype html><table> b <!--foo-->
 tests19.dat	28	<!doctype html><select><option></optgroup>
 tests19.dat	35	<!doctype html><frameset></noframes>
-tests19.dat	40	<!doctype html><html><frameset></frameset></html>abc
 tests19.dat	81	<!doctype html><p><math></p>a
 tests19.dat	83	<!doctype html><math></html>
 tests19.dat	88	<!doctype html><image/>
@@ -275,7 +274,6 @@ tests2.dat	31	&AMp;
 tests2.dat	33	<!DOCTYPE html>X</body>X
 tests2.dat	45	test test
 tests2.dat	5	<!DOCTYPE html><frameset>test
-tests2.dat	55	<!DOCTYPE html>X</html>X
 tests2.dat	59	<!DOCTYPE html><!--x--
 tests2.dat	6	<!DOCTYPE html><frameset> te st
 tests2.dat	61	<!DOCTYPE <!DOCTYPE HTML>><!--<!--x-->-->
@@ -332,7 +330,6 @@ tests6.dat	4	<!doctype>
 tests6.dat	43	</table><tr>
 tests6.dat	44	<body></body></html>
 tests6.dat	46	<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"><html></html>
-tests6.dat	7	<frameset></frameset> foo
 tests6.dat	9	<frameset></frameset> <div>
 tests7.dat	19	<!doctype html><table>X<input type=hidDEN></table>
 tests7.dat	23	<!doctype html><table><select>X<tr>
@@ -371,9 +368,6 @@ webkit01.dat	14	<A>test< /A>
 webkit01.dat	15	&lt;
 webkit01.dat	17	<body></br foo="bar"></body>
 webkit01.dat	19	<body></body></br foo="bar">
-webkit01.dat	23	<html><body></body></html>x<!-- Hi there -->
-webkit01.dat	24	<html><body></body></html>x<!-- Hi there --></html><!-- Again -->
-webkit01.dat	25	<html><body></body></html>x<!-- Hi there --></body></html><!-- Again -->
 webkit01.dat	43	<svg><title><svg><div>
 webkit01.dat	44	<img <="" FAIL>
 webkit01.dat	45	<ul><li><div id='foo'/>A</li><li>B<div>C</div></li></ul>
